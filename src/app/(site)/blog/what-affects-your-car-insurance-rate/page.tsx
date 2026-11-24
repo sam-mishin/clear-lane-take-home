@@ -7,7 +7,7 @@ import {
   articles,
   whatAffectsYourRate as article,
 } from "@/lib/content/articles";
-import { CTA_LABEL, ROUTES } from "@/lib/site";
+import { ROUTES } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "What Affects Your Car Insurance Rate?",
@@ -54,7 +54,7 @@ export default function ArticlePage() {
 
           {/* TODO: move the inline CTA to where it fits best in the article */}
           <aside aria-label="Compare your options">
-            <CompareLink>{CTA_LABEL}</CompareLink>
+            <CompareLink />
           </aside>
         </article>
       </div>

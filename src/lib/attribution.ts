@@ -22,6 +22,12 @@ export function pickAttribution(params: URLSearchParams): Attribution {
   return attribution;
 }
 
+// Read attribution from the address bar at the moment it's needed (event handlers only).
+export function currentAttribution(): Attribution {
+  if (typeof window === "undefined") return {};
+  return pickAttribution(new URLSearchParams(window.location.search));
+}
+
 // Add the attribution params to a link, keeping any params already on it.
 // withAttribution("/compare", { utm_source: "fb" }) -> "/compare?utm_source=fb"
 export function withAttribution(

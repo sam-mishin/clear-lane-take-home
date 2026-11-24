@@ -1,37 +1,36 @@
-"use client";
-
-import Link from "next/link";
-import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { pickAttribution, withAttribution } from "@/lib/attribution";
-import { ROUTES } from "@/lib/site";
-
-type Props = { className?: string; children: React.ReactNode };
+import { AttributedLink } from "@/components/AttributedLink";
+import {
+  buttonStyles,
+  type ButtonSize,
+  type ButtonVariant,
+} from "@/components/ui/Button";
+import { ArrowRightIcon } from "@/components/ui/Icons";
+import { CTA_LABEL, ROUTES } from "@/lib/site";
 
 // EVERY link to the comparison page uses this component, so campaign params
 // in the current URL (utm_source, utm_campaign, click_id) carry through.
-// It wraps itself in Suspense because it reads the URL, so pages can use it anywhere.
-// TODO: style as the primary CTA.
-export function CompareLink(props: Props) {
+// Looks like a primary button by default; the label is always "Compare my options".
+export function CompareLink({
+  variant = "primary",
+  size = "md",
+  fullWidth,
+  className,
+  onClick,
+}: {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  fullWidth?: boolean;
+  className?: string;
+  onClick?: () => void;
+}) {
   return (
-    <Suspense
-      fallback={
-        <Link href={ROUTES.compare} className={props.className}>
-          {props.children}
-        </Link>
-      }
+    <AttributedLink
+      href={ROUTES.compare}
+      onClick={onClick}
+      className={buttonStyles({ variant, size, fullWidth, className })}
     >
-      <CompareLinkWithParams {...props} />
-    </Suspense>
-  );
-}
-
-function CompareLinkWithParams({ className, children }: Props) {
-  const params = useSearchParams();
-  const href = withAttribution(ROUTES.compare, pickAttribution(params));
-  return (
-    <Link href={href} className={className}>
-      {children}
-    </Link>
+      {CTA_LABEL}
+      <ArrowRightIcon className="size-5" />
+    </AttributedLink>
   );
 }

@@ -2,9 +2,12 @@ import { ROUTES } from "@/lib/site";
 
 // Article cards for homepage Resources and the article's Related articles.
 // A card with no href is a labeled preview (not a link).
+export type ArticleMotif = "road" | "shield" | "calendar";
+
 export type ArticleSummary = {
   title: string;
   excerpt: string;
+  motif: ArticleMotif; // which CardArt illustration the card shows
   href?: string;
 };
 
@@ -13,10 +16,11 @@ export const articles: ArticleSummary[] = [
   {
     title: "What affects your car insurance rate?",
     excerpt: "TODO",
+    motif: "road",
     href: ROUTES.article,
   },
-  { title: "TODO: preview article", excerpt: "TODO" },
-  { title: "TODO: preview article", excerpt: "TODO" },
+  { title: "TODO: preview article", excerpt: "TODO", motif: "shield" },
+  { title: "TODO: preview article", excerpt: "TODO", motif: "calendar" },
 ];
 
 // The one full article. Sections drive both the body and the table of contents,

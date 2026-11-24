@@ -19,3 +19,11 @@ export const CTA_LABEL = "Compare my options";
 // TODO: final wording of the disclosure (comparison and referral service, not an insurer;
 // the brand is fictional).
 export const DISCLOSURE = "TODO: disclosure";
+
+// Short version, shown under every funnel button (NotInsurerNote).
+export const NOT_AN_INSURER =
+  "Free to use. ClearLane is a comparison and referral service, not an insurer.";
+
+// Shown in the footer on every page.
+export const FICTIONAL_NOTE =
+  "ClearLane Auto is a fictional brand created for a frontend take-home exercise.";

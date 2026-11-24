@@ -4,6 +4,8 @@ Three connected pages for ClearLane Auto, a fictional auto insurance comparison 
 
 Live preview: TODO
 
+Design file: [ClearLane Auto: components](https://claude.ai/artifact/EiQHuKCV1dWSzBp4C2z9m8). Every component and state, plus all three pages at 375px and 1440px, rendered from this code.
+
 ## Run it
 
 ```bash
