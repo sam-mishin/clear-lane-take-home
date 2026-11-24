@@ -1,11 +1,19 @@
 export type Step = { title: string; body: string };
 
 // Homepage "How it works". Titles come straight from the brief.
-// TODO: one-sentence body for each.
 export const howItWorks: Step[] = [
-  { title: "Share a few details", body: "TODO" },
-  { title: "Explore options", body: "TODO" },
-  { title: "Choose what fits", body: "TODO" },
+  {
+    title: "Share a few details",
+    body: "Start with your age range and ZIP code. No name, phone number or email to begin.",
+  },
+  {
+    title: "Explore options",
+    body: "See which kinds of coverage and insurers are available where you live, explained in plain language.",
+  },
+  {
+    title: "Choose what fits",
+    body: "Decide whether to contact an insurer. You buy directly from them, never through ClearLane.",
+  },
 ];
 
 // Landing page "What happens next".

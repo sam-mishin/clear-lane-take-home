@@ -10,18 +10,40 @@ import type { ArticleMotif } from "@/lib/content/articles";
 //   picture shrink or grow with its container.
 // - Next.js serves SVG files as they are (no resizing needed for vector images).
 
-// Homepage hero: a road to the horizon, a car in its lane and a signpost.
-// It's near the top of the homepage, so it loads right away with high priority.
-export function HeroRoad({ className }: { className?: string }) {
+// Homepage hero: a full-width landscape (hills, a road with a car in its lane and a
+// signpost) behind the hero text. It's at the top of the homepage, so it loads right
+// away with high priority.
+// - fill: the picture covers its parent, which must be position: relative or absolute.
+// - object-cover crops it to fit instead of stretching it; the page decides which
+//   corner to keep with an object-position class (e.g. object-right-bottom).
+export function HeroLandscape({ className }: { className?: string }) {
   return (
     <Image
-      src="/illustrations/hero-road.svg"
+      src="/illustrations/hero-landscape.svg"
       alt=""
-      width={560}
-      height={440}
+      fill
+      sizes="100vw"
       loading="eager"
       fetchPriority="high"
-      className={`h-auto w-full ${className ?? ""}`}
+      className={`object-cover ${className ?? ""}`}
+    />
+  );
+}
+
+// The same landscape drawn wider (3840px, with more hills and trees on both sides)
+// for very wide screens. It's shown at its real size and centered, never scaled up,
+// so the road and signpost stay the same size and the hills reach the screen edges
+// on any monitor up to 3840px wide.
+export function HeroLandscapeWide({ className }: { className?: string }) {
+  return (
+    <Image
+      src="/illustrations/hero-landscape-wide.svg"
+      alt=""
+      width={3840}
+      height={760}
+      loading="eager"
+      fetchPriority="high"
+      className={`h-190 w-960 max-w-none ${className ?? ""}`}
     />
   );
 }

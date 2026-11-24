@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import clsx from "clsx";
 import { usePathname } from "next/navigation";
 import { AttributedLink } from "@/components/AttributedLink";
 import { CompareLink } from "@/components/CompareLink";
@@ -43,7 +44,15 @@ export function SiteHeader() {
   const close = () => setOpen(false);
 
   return (
-    <header className="border-line bg-cream/95 sticky top-0 z-40 border-b backdrop-blur">
+    <header
+      className={clsx(
+        "sticky top-0 z-40 border-b backdrop-blur",
+        // Homepage: same teal as the hero below it, so the two read as one block.
+        pathname === ROUTES.home
+          ? "bg-teal-soft/95 border-transparent"
+          : "border-line bg-cream/95",
+      )}
+    >
       <Container className="flex min-h-18 items-center justify-between gap-6">
         <Wordmark />
 
