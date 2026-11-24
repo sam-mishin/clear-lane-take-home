@@ -1,18 +1,15 @@
-import clsx from "clsx";
 import { AlertIcon } from "@/components/ui/Icons";
 
-// Labeled text input with helper text and an error message.
-// The label is always visible; the helper and error are tied to the input with
-// aria-describedby, and aria-invalid turns the border red.
+// A text input with a label that's always visible, optional helper text, and an error
+// message. Used for the ZIP code.
+// Accessibility: aria-describedby points at the error and helper text so screen readers
+// read them out with the field, and aria-invalid turns the border red when there's an error.
 
-type TextFieldProps = Omit<
-  React.InputHTMLAttributes<HTMLInputElement>,
-  "id"
-> & {
-  id: string;
+type TextFieldProps = React.InputHTMLAttributes<HTMLInputElement> & {
+  id: string; // also used to build the ids of the helper and error text
   label: string;
-  helper?: string;
-  error?: string | null;
+  helper?: string; // e.g. "5 digits, like 02134"
+  error?: string | null; // shown in red under the field when set
   ref?: React.Ref<HTMLInputElement>;
 };
 
@@ -22,25 +19,32 @@ export function TextField({
   helper,
   error,
   className,
-  ...props
+  ...inputProps
 }: TextFieldProps) {
-  const helperId = helper ? `${id}-helper` : undefined;
-  const errorId = error ? `${id}-error` : undefined;
+  const helperId = `${id}-helper`;
+  const errorId = `${id}-error`;
+
+  // Which text belongs to this field: the error first (if any), then the helper.
+  const describedByIds: string[] = [];
+  if (error) describedByIds.push(errorId);
+  if (helper) describedByIds.push(helperId);
   const describedBy =
-    [errorId, helperId].filter(Boolean).join(" ") || undefined;
+    describedByIds.length > 0 ? describedByIds.join(" ") : undefined;
 
   return (
     <div className={className}>
       <label htmlFor={id} className="mb-2 block text-base font-semibold">
         {label}
       </label>
+
       <input
         id={id}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
         className="border-ink-muted bg-surface hover:border-ink focus-visible:border-teal-strong aria-invalid:border-error read-only:bg-cream min-h-12 w-full rounded-xl border-2 px-4 text-lg tracking-widest"
-        {...props}
+        {...inputProps}
       />
+
       {error && (
         <p
           id={errorId}
@@ -50,11 +54,9 @@ export function TextField({
           {error}
         </p>
       )}
+
       {helper && (
-        <p
-          id={helperId}
-          className={clsx("text-ink-muted text-sm", error ? "mt-1" : "mt-2")}
-        >
+        <p id={helperId} className="text-ink-muted mt-2 text-sm">
           {helper}
         </p>
       )}

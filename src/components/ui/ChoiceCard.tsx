@@ -1,20 +1,29 @@
 import clsx from "clsx";
 import { CheckIcon } from "@/components/ui/Icons";
 
-// Two selectable cards that look identical:
-// - RadioCard: a native radio for "pick one and read about it" (coverage explorer).
-//   Arrow keys move the selection, which is what you want there.
-// - ChoiceButton: a button for "pick one and move on" (funnel age step).
-//   A radio would advance the funnel on the first arrow key press, so the funnel uses buttons.
-// Selected = teal border + soft fill + check icon, never color alone.
+// Two selectable cards that look the same but behave differently:
+//
+// - RadioCard: a real radio button, for "pick one and read about it" (coverage explorer).
+//   Arrow keys move between options, which is what you want there.
+//
+// - ChoiceButton: a plain button, for "pick one and move on" (age step in the funnel).
+//   With radios, the first arrow key press would select an age and jump to the next step.
+//
+// The selected card has a teal border, a light teal fill and a check mark, so the
+// selection doesn't depend on color alone.
 
-const card =
-  "flex w-full cursor-pointer items-center justify-between gap-3 rounded-card border-2 bg-surface px-5 text-left font-semibold transition-colors duration-150 motion-reduce:transition-none";
+function cardClasses(isSelected: boolean) {
+  return clsx(
+    "flex w-full cursor-pointer items-center justify-between gap-3 rounded-card border-2 bg-surface text-left font-semibold transition-colors duration-150 motion-reduce:transition-none",
+    isSelected
+      ? "border-teal-strong bg-teal-soft"
+      : "border-line hover:border-ink-muted",
+  );
+}
 
-const idle = "border-line hover:border-ink-muted";
-const selected = "border-teal-strong bg-teal-soft";
-
-function Check({ visible }: { visible: boolean }) {
+// The round check mark on the right. It keeps its space when hidden, so the
+// label doesn't shift when a card is selected.
+function CheckMark({ visible }: { visible: boolean }) {
   return (
     <span
       className={clsx(
@@ -28,37 +37,37 @@ function Check({ visible }: { visible: boolean }) {
 }
 
 type RadioCardProps = {
-  name: string;
-  value: string;
+  name: string; // radios with the same name form one group
   checked: boolean;
-  onChange: (value: string) => void;
+  onSelect: () => void;
   label: string;
-  description?: string;
+  description?: string; // optional second line in lighter text
 };
 
 export function RadioCard({
   name,
-  value,
   checked,
-  onChange,
+  onSelect,
   label,
   description,
 }: RadioCardProps) {
   return (
+    // The whole card is the <label>, so clicking anywhere on it selects the radio.
     <label className="block">
+      {/* The real radio is visually hidden ("sr-only") but still works with the
+          keyboard and screen readers. "peer" lets the card below show its focus ring. */}
       <input
         type="radio"
         name={name}
-        value={value}
         checked={checked}
-        onChange={() => onChange(value)}
+        onChange={onSelect}
         className="peer sr-only"
       />
       <span
         className={clsx(
-          card,
-          "peer-focus-visible:outline-teal-strong min-h-14 py-4 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2",
-          checked ? selected : idle,
+          cardClasses(checked),
+          "min-h-14 px-5 py-4",
+          "peer-focus-visible:outline-teal-strong peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2",
         )}
       >
         <span>
@@ -69,41 +78,39 @@ export function RadioCard({
             </span>
           )}
         </span>
-        <Check visible={checked} />
+        <CheckMark visible={checked} />
       </span>
     </label>
   );
 }
 
-type ChoiceButtonProps = Omit<
-  React.ButtonHTMLAttributes<HTMLButtonElement>,
-  "children"
-> & {
+type ChoiceButtonProps = {
   label: string;
   selected: boolean;
-  ref?: React.Ref<HTMLButtonElement>;
+  onClick: () => void;
+  ref?: React.Ref<HTMLButtonElement>; // lets the funnel move focus back to this button
 };
 
 export function ChoiceButton({
   label,
-  selected: isSelected,
-  className,
-  ...props
+  selected,
+  onClick,
+  ref,
 }: ChoiceButtonProps) {
   return (
     <button
+      ref={ref}
       type="button"
-      aria-pressed={isSelected}
+      // aria-pressed tells screen readers which age is currently chosen.
+      aria-pressed={selected}
+      onClick={onClick}
       className={clsx(
-        card,
+        cardClasses(selected),
         "min-h-14 gap-2 px-4 py-3 text-lg whitespace-nowrap",
-        isSelected ? selected : idle,
-        className,
       )}
-      {...props}
     >
       {label}
-      <Check visible={isSelected} />
+      <CheckMark visible={selected} />
     </button>
   );
 }

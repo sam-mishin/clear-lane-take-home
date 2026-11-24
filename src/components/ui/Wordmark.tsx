@@ -7,6 +7,7 @@ import clsx from "clsx";
 export function Wordmark({ tone = "light" }: { tone?: "light" | "dark" }) {
   const dark = tone === "dark";
   return (
+    // The wordmark is also the link back to the homepage.
     <Link
       href="/"
       className={clsx(

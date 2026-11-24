@@ -17,13 +17,16 @@ import { NAV_LINKS, ROUTES } from "@/lib/site";
 // - aria-current="page" marks where you are.
 // Every link carries campaign params through (AttributedLink / CompareLink).
 
+// Home and the article show as text links. The Compare page gets the button instead.
 const textLinks = NAV_LINKS.filter((link) => link.href !== ROUTES.compare);
 
 export function SiteHeader() {
-  const pathname = usePathname();
-  const [open, setOpen] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  const pathname = usePathname(); // the current page, for aria-current
+  const [open, setOpen] = useState(false); // is the mobile menu open?
+  const buttonRef = useRef<HTMLButtonElement>(null); // the Menu button, to return focus to
 
+  // While the menu is open, listen for Escape: close the menu and put focus back
+  // on the Menu button so keyboard users aren't lost.
   useEffect(() => {
     if (!open) return;
     function onKeyDown(event: KeyboardEvent) {
@@ -33,6 +36,7 @@ export function SiteHeader() {
       }
     }
     document.addEventListener("keydown", onKeyDown);
+    // Stop listening once the menu closes.
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open]);
 

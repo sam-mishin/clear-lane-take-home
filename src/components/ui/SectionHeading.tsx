@@ -1,30 +1,23 @@
 import clsx from "clsx";
 
-// Eyebrow + H2 + lead, so every section on every page starts the same way.
-// Pass the id the <section aria-labelledby> points at.
+// The start of a page section: an optional eyebrow (small teal label), the H2,
+// and an optional one-line lead. Keeps every section on every page consistent.
+// Pass the same id that the <section aria-labelledby="..."> points at.
 export function SectionHeading({
   id,
   eyebrow,
   title,
   lead,
-  align = "left",
   className,
 }: {
   id: string;
   eyebrow?: string;
   title: string;
   lead?: string;
-  align?: "left" | "center";
   className?: string;
 }) {
   return (
-    <div
-      className={clsx(
-        "max-w-2xl",
-        align === "center" && "mx-auto text-center",
-        className,
-      )}
-    >
+    <div className={clsx("max-w-2xl", className)}>
       {eyebrow && (
         <p className="text-teal-strong mb-3 text-sm font-semibold">{eyebrow}</p>
       )}

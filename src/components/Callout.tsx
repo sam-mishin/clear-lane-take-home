@@ -9,6 +9,7 @@ export function Callout({
   children: React.ReactNode;
 }) {
   return (
+    // <aside> marks it as a side note; aria-label names it for screen readers.
     <aside
       aria-label={title}
       className="rounded-card bg-teal-soft flex gap-4 p-6"

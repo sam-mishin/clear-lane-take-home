@@ -8,4 +8,6 @@ export const AGE_RANGES = [
   { id: "65-plus", label: "65+" },
 ] as const;
 
+// The allowed ids: "18-24" | "25-34" | ... | "65-plus". Read from the list above,
+// so adding a range to AGE_RANGES updates this type too.
 export type AgeRangeId = (typeof AGE_RANGES)[number]["id"];

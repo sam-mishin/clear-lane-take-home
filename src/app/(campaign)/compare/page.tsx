@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { Container } from "@/components/ui/Container";
 import { AgeZipFunnel } from "@/components/funnel/AgeZipFunnel";
 import { StepList } from "@/components/StepList";
@@ -24,10 +23,7 @@ export default function ComparePage() {
         <Container>
           <h1 id="hero-heading">TODO: ad-matched headline</h1>
 
-          {/* The funnel reads the URL (attribution, ?mock=fail), so it needs Suspense. */}
-          <Suspense fallback={null}>
-            <AgeZipFunnel />
-          </Suspense>
+          <AgeZipFunnel />
         </Container>
       </section>
 

@@ -17,6 +17,7 @@ export function JumpToFormButton({
     <a
       href={`#${FUNNEL_ID}`}
       onClick={(event) => {
+        // Skip the link's normal jump and use goToFunnel, which also moves focus.
         event.preventDefault();
         goToFunnel();
       }}

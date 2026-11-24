@@ -5,26 +5,32 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { pickAttribution, withAttribution } from "@/lib/attribution";
 
-type Props = Omit<React.ComponentProps<typeof Link>, "href"> & {
+// An internal link that keeps the campaign params (utm_source, utm_campaign, click_id)
+// from the current URL. Used by CompareLink, the header and footer links and article
+// cards, so someone who lands on / or the article from an ad still has those params
+// when they reach /compare.
+
+type AttributedLinkProps = {
   href: string;
+  className?: string;
+  children: React.ReactNode;
+  onClick?: () => void;
+  "aria-current"?: "page"; // set on the link to the page you're on
 };
 
-// An internal link that carries utm_source, utm_campaign and click_id from the
-// current URL. Used by CompareLink, the header nav and article cards, so a visitor who
-// lands on / or the article with campaign params still has them when they reach /compare.
-// It reads the URL, so it wraps itself in Suspense: the prerendered HTML has the plain
-// href and the params are added as soon as the page hydrates.
-export function AttributedLink(props: Props) {
+export function AttributedLink(props: AttributedLinkProps) {
+  // useSearchParams() (below) needs a Suspense boundary. Until the page loads in the
+  // browser, the fallback shows the same link without the params.
   return (
     <Suspense fallback={<Link {...props} />}>
-      <LinkWithParams {...props} />
+      <LinkWithCampaignParams {...props} />
     </Suspense>
   );
 }
 
-function LinkWithParams({ href, ...props }: Props) {
+function LinkWithCampaignParams({ href, ...otherProps }: AttributedLinkProps) {
   const params = useSearchParams();
-  return (
-    <Link href={withAttribution(href, pickAttribution(params))} {...props} />
-  );
+  // e.g. "/compare" -> "/compare?utm_source=fb&click_id=abc"
+  const hrefWithParams = withAttribution(href, pickAttribution(params));
+  return <Link href={hrefWithParams} {...otherProps} />;
 }

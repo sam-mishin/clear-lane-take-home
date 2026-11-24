@@ -29,6 +29,7 @@ export function CompareLink({
       onClick={onClick}
       className={buttonStyles({ variant, size, fullWidth, className })}
     >
+      {/* Always "Compare my options", from lib/site.ts */}
       {CTA_LABEL}
       <ArrowRightIcon className="size-5" />
     </AttributedLink>

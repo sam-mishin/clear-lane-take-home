@@ -10,6 +10,8 @@ export function StepList({ steps }: { steps: Step[] }) {
           key={step.title}
           className="rounded-card border-line bg-surface border p-6 md:p-8"
         >
+          {/* The number circle is decoration: the <ol> already tells screen readers
+              "1 of 3", so it's hidden from them to avoid reading the number twice. */}
           <span
             aria-hidden="true"
             className="bg-teal-soft text-teal-strong flex size-10 items-center justify-center rounded-full font-bold"

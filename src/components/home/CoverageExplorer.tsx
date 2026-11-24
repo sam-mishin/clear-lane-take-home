@@ -6,30 +6,30 @@ import { RadioCard } from "@/components/ui/ChoiceCard";
 import { CheckIcon, XIcon } from "@/components/ui/Icons";
 import { coverageExamples } from "@/lib/content/coverage";
 
-// Three selectable coverage examples with an adjacent explanation panel.
-// Native radios: Tab into the group, arrow keys switch examples, the panel follows.
-// The panel is aria-live="polite", so screen readers hear the new explanation.
-// Every option leads with situations, then the term (style guide, Coverage explorer).
+// Three coverage examples on the left; picking one updates the explanation on the right.
+// - The options are real radio buttons: Tab into the group, arrow keys switch examples.
+// - The explanation panel is aria-live="polite", so screen readers read the new
+//   explanation when the selection changes.
+// - Each explanation leads with everyday situations, then the coverage terms.
 export function CoverageExplorer() {
-  const [selectedId, setSelectedId] = useState(coverageExamples[1].id);
-  const selected =
-    coverageExamples.find((example) => example.id === selectedId) ??
-    coverageExamples[0];
+  // Which example is shown: 0, 1 or 2. Starts on the middle one ("Liability + collision").
+  const [selectedIndex, setSelectedIndex] = useState(1);
+  const selected = coverageExamples[selectedIndex];
 
   return (
     <div className="mt-10 grid gap-6 md:mt-12 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-8">
+      {/* Left: the three options */}
       <fieldset>
         <legend className="mb-4 text-lg font-semibold">
           Choose an example to compare
         </legend>
         <div className="space-y-3">
-          {coverageExamples.map((example) => (
+          {coverageExamples.map((example, index) => (
             <RadioCard
               key={example.id}
               name="coverage-example"
-              value={example.id}
-              checked={example.id === selectedId}
-              onChange={setSelectedId}
+              checked={index === selectedIndex}
+              onSelect={() => setSelectedIndex(index)}
               label={example.name}
               description={example.summary}
             />
@@ -37,6 +37,7 @@ export function CoverageExplorer() {
         </div>
       </fieldset>
 
+      {/* Right: the explanation for the selected option */}
       <div
         aria-live="polite"
         className="rounded-card border-line bg-surface border p-6 shadow-sm md:p-8"
@@ -53,10 +54,10 @@ export function CoverageExplorer() {
               Helps in situations like
             </h4>
             <ul className="mt-3 space-y-3">
-              {selected.helpsWith.map((item) => (
-                <li key={item} className="flex gap-3 text-lg">
+              {selected.helpsWith.map((situation) => (
+                <li key={situation} className="flex gap-3 text-lg">
                   <CheckIcon className="text-teal-strong mt-1 size-5 shrink-0" />
-                  {item}
+                  {situation}
                 </li>
               ))}
             </ul>
@@ -64,23 +65,24 @@ export function CoverageExplorer() {
           <div>
             <h4 className="text-base font-semibold">Doesn&apos;t help if</h4>
             <ul className="mt-3 space-y-3">
-              {selected.doesNotHelpWith.map((item) => (
-                <li key={item} className="flex gap-3 text-lg">
+              {selected.doesNotHelpWith.map((situation) => (
+                <li key={situation} className="flex gap-3 text-lg">
                   <XIcon className="text-ink-muted mt-1 size-5 shrink-0" />
-                  {item}
+                  {situation}
                 </li>
               ))}
             </ul>
           </div>
         </div>
 
+        {/* Short definitions of the coverage terms */}
         <div className="border-line mt-6 border-t pt-6">
           <h4 className="text-base font-semibold">What the terms mean</h4>
           <dl className="mt-3 space-y-3">
-            {selected.terms.map(({ term, definition }) => (
-              <div key={term}>
-                <dt className="text-lg font-semibold">{term}</dt>
-                <dd className="text-ink-muted text-lg">{definition}</dd>
+            {selected.terms.map((item) => (
+              <div key={item.term}>
+                <dt className="text-lg font-semibold">{item.term}</dt>
+                <dd className="text-ink-muted text-lg">{item.definition}</dd>
               </div>
             ))}
           </dl>

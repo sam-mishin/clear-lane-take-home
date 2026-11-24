@@ -1,28 +1,43 @@
 import clsx from "clsx";
 import { SpinnerIcon } from "@/components/ui/Icons";
 
-// One button system, reused everywhere: <Button> for actions, buttonStyles() for links
-// that should look like buttons (CompareLink, "See how it works", the /compare final CTA).
-// Full class names only, so Tailwind can see every one of them.
+// The one button style for the whole site.
+// - <Button> is for actions: submit, try again, change an answer.
+// - buttonStyles() returns the same classes for links that should look like buttons
+//   (CompareLink, JumpToFormButton).
+// Class names are written out in full so Tailwind can find them when it builds the CSS.
 
 export type ButtonVariant = "primary" | "secondary" | "onDark" | "text";
 export type ButtonSize = "md" | "sm";
 
-const base =
+// Shared by every variant: pill shape, bold label, smooth color change, dimmed when disabled.
+const BASE_CLASSES =
   "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-colors duration-150 motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60";
 
-const variants: Record<ButtonVariant, string> = {
+// Colors for each variant, including its hover color.
+const VARIANT_CLASSES: Record<ButtonVariant, string> = {
+  // Teal with white text (5.5:1). The main call to action.
   primary: "bg-teal-strong text-white hover:bg-ink",
+  // Navy outline. For the second choice next to a primary button.
   secondary:
     "border-2 border-ink bg-transparent text-ink hover:bg-ink hover:text-white",
-  // Sits on the dark ink band, so its focus ring switches to the lighter teal.
+  // Cream button for the dark navy band. Its focus ring uses the lighter teal so it shows up.
   onDark: "bg-cream text-ink hover:bg-teal-soft focus-visible:outline-teal",
+  // Looks like an underlined link (the funnel's "Change").
   text: "rounded-none text-teal-strong underline underline-offset-4 hover:text-ink",
 };
 
-const sizes: Record<ButtonSize, string> = {
-  md: "min-h-12 px-6 text-base",
-  sm: "min-h-11 px-5 text-sm",
+// Height and padding. 44px+ tall so they're easy to tap.
+const SIZE_CLASSES: Record<ButtonSize, string> = {
+  md: "min-h-12 px-6 text-base", // 48px: the default
+  sm: "min-h-11 px-5 text-sm", // 44px: the header button
+};
+
+type ButtonStyleOptions = {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  fullWidth?: boolean; // full width on phones, normal width from 768px up
+  className?: string; // extra classes, e.g. spacing like "mt-5"
 };
 
 export function buttonStyles({
@@ -30,42 +45,37 @@ export function buttonStyles({
   size = "md",
   fullWidth = false,
   className,
-}: {
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-  fullWidth?: boolean;
-  className?: string;
-} = {}) {
+}: ButtonStyleOptions = {}) {
   return clsx(
-    base,
-    variants[variant],
-    variant !== "text" && sizes[size],
+    BASE_CLASSES,
+    VARIANT_CLASSES[variant],
+    // Text buttons look like links, so they skip the height and padding.
+    variant !== "text" && SIZE_CLASSES[size],
     fullWidth && "w-full md:w-auto",
     className,
   );
 }
 
-type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-  fullWidth?: boolean;
-  // While loading the button keeps its size, swaps its label and can't be clicked again.
-  loading?: boolean;
-  loadingLabel?: string;
-  ref?: React.Ref<HTMLButtonElement>;
-};
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
+  ButtonStyleOptions & {
+    // While loading, the button is disabled, shows a spinner and swaps its label,
+    // so it can't be clicked twice.
+    loading?: boolean;
+    loadingLabel?: string;
+    ref?: React.Ref<HTMLButtonElement>;
+  };
 
 export function Button({
-  variant = "primary",
-  size = "md",
+  variant,
+  size,
   fullWidth,
+  className,
   loading = false,
   loadingLabel,
-  className,
-  children,
   disabled,
-  type = "button",
-  ...props
+  type = "button", // so a button inside a form doesn't submit it by accident
+  children,
+  ...otherProps
 }: ButtonProps) {
   return (
     <button
@@ -73,16 +83,10 @@ export function Button({
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={buttonStyles({ variant, size, fullWidth, className })}
-      {...props}
+      {...otherProps}
     >
-      {loading ? (
-        <>
-          <SpinnerIcon />
-          {loadingLabel ?? children}
-        </>
-      ) : (
-        children
-      )}
+      {loading && <SpinnerIcon />}
+      {loading && loadingLabel ? loadingLabel : children}
     </button>
   );
 }

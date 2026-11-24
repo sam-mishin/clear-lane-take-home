@@ -1,8 +1,12 @@
 // One small inline icon set (24px grid, 2px rounded strokes) so the project needs no icon
 // dependency. Every icon is decorative (aria-hidden); the text next to it carries the meaning.
 
+// Every icon accepts a className, usually a size like "size-5" plus a text color.
+// The stroke uses currentColor, so the icon takes the text color around it.
 type IconProps = { className?: string };
 
+// Shared wrapper: the 24x24 canvas, stroke style and accessibility attributes.
+// Each icon below only supplies its own lines and shapes.
 function Svg({
   className = "size-5",
   children,
@@ -75,6 +79,8 @@ export const AlertIcon = (p: IconProps) => (
   </Svg>
 );
 
+// Loading spinner. It spins with Tailwind's animate-spin, and stays still for
+// people who have reduced motion turned on.
 export const SpinnerIcon = ({ className = "size-5" }: IconProps) => (
   <Svg className={`${className} animate-spin motion-reduce:animate-none`}>
     <path d="M21 12a9 9 0 1 1-6.2-8.6" />

@@ -22,8 +22,10 @@ export function AgeQuickStart() {
       >
         {AGE_RANGES.map((range) => (
           <li key={range.id}>
+            {/* e.g. /compare?age=45-54, plus any campaign params */}
             <AttributedLink
               href={`${ROUTES.compare}?age=${range.id}`}
+              // Log the event before the browser moves to /compare.
               onClick={() =>
                 track("age_selected", {
                   attribution: currentAttribution(),

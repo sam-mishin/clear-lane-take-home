@@ -15,6 +15,7 @@ export function FinalCtaBand({
     <section aria-labelledby="final-cta-heading" className="py-16 md:py-24">
       <Container>
         <div className="rounded-card bg-ink text-cream relative overflow-hidden px-6 py-12 text-center md:px-12 md:py-16">
+          {/* Lane lines sit behind the text; "relative" on the text keeps it on top. */}
           <RoadLines />
           <div className="relative">
             <h2
@@ -26,6 +27,7 @@ export function FinalCtaBand({
             <p className="text-on-ink-muted mx-auto mt-4 max-w-xl text-lg md:text-xl">
               {body}
             </p>
+            {/* The button passed in by the page */}
             <div className="mt-8 flex justify-center">{action}</div>
           </div>
         </div>

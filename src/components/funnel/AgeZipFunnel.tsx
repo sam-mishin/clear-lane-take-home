@@ -3,22 +3,33 @@
 // The Task 1 funnel: age -> ZIP -> submit.
 //
 // How it's built:
-// - useReducer holds ANSWERS (ageRange, zip) separately from STATUS (which screen),
-//   so a failed request never wipes what the person entered.
-// - useRef is used for things the screen doesn't show: the double-submit lock,
-//   the last status (for focus moves) and the elements we move focus to.
-// - Events: age_selected when the age step is done; comparison_started only after
-//   the request succeeds. Neither event includes age or ZIP.
-// - Add ?mock=fail to the URL to make submitComparison() fail.
+// - useReducer holds the ANSWERS (ageRange, zip) separately from the STATUS (which
+//   screen is showing), so a failed request never wipes what the person entered.
+// - useRef holds things the screen doesn't show: the double-submit lock, the number of
+//   attempts (for the mock error) and the elements we move focus to.
+// - Events: age_selected when an age is picked; comparison_started only after the
+//   request succeeds. Neither event includes the age or the ZIP code.
+// - Campaign params are read from the address bar when they're needed, so the funnel
+//   doesn't need useSearchParams (and shows up in the page's first HTML).
+//
+// Testing the error state (also in the README):
+//   ?mock=fail         the first attempt fails, "Try again" then succeeds
+//   ?mock=fail-always  every attempt fails
+// Homepage quick start: /compare?age=45-54 opens straight on the ZIP step.
 
-import { useEffect, useId, useReducer, useRef, type FormEvent } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
-import { AGE_RANGES, type AgeRangeId } from "@/lib/ageRanges";
-import { pickAttribution } from "@/lib/attribution";
-import { track } from "@/lib/analytics";
-import { submitComparison } from "@/lib/submitComparison";
-import { CTA_LABEL } from "@/lib/site";
+import { useEffect, useReducer, useRef, useState } from "react";
+import { FUNNEL_ID } from "@/components/funnel/goToFunnel";
+import { NotInsurerNote } from "@/components/NotInsurerNote";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ChoiceButton } from "@/components/ui/ChoiceCard";
+import { AlertIcon, ArrowRightIcon, CheckIcon } from "@/components/ui/Icons";
+import { TextField } from "@/components/ui/TextField";
+import { AGE_RANGES, type AgeRangeId } from "@/lib/ageRanges";
+import { track } from "@/lib/analytics";
+import { currentAttribution } from "@/lib/attribution";
+import { CTA_LABEL, ROUTES } from "@/lib/site";
+import { submitComparison } from "@/lib/submitComparison";
 
 // ---------------------------------------------------------------------------
 // State
@@ -34,14 +45,14 @@ export type FunnelState = {
 };
 
 type FunnelAction =
-  | { type: "PICK_AGE"; ageRange: AgeRangeId } // radio changed (stays on step 1)
-  | { type: "GO_TO_ZIP"; ageRange: AgeRangeId } // age step done
-  | { type: "CHANGE_AGE" } // "Change" link on step 2
-  | { type: "SET_ZIP"; zip: string }
-  | { type: "ZIP_INVALID"; error: string }
-  | { type: "SUBMIT" }
-  | { type: "SUBMIT_OK" }
-  | { type: "SUBMIT_FAIL" };
+  | { type: "SELECT_AGE"; ageRange: AgeRangeId } // age picked: go to the ZIP step
+  | { type: "CHANGE_AGE" } // "Change" on the ZIP step: back to step 1
+  | { type: "SET_ZIP"; zip: string } // typing in the ZIP field
+  | { type: "ZIP_INVALID"; error: string } // submit pressed with a bad ZIP
+  | { type: "SUBMIT" } // request started
+  | { type: "SUBMIT_OK" } // request worked
+  | { type: "SUBMIT_FAIL" } // request failed
+  | { type: "EDIT_ANSWERS" }; // "Change my answers" on the success screen
 
 const initialState: FunnelState = {
   status: "age",
@@ -54,17 +65,12 @@ const initialState: FunnelState = {
 // All the funnel's rules live here. No fetching, logging or DOM work.
 function funnelReducer(state: FunnelState, action: FunnelAction): FunnelState {
   switch (action.type) {
-    case "PICK_AGE":
-      return { ...state, ageRange: action.ageRange };
-
-    case "GO_TO_ZIP":
+    case "SELECT_AGE":
       return { ...state, ageRange: action.ageRange, status: "zip" };
 
     case "CHANGE_AGE":
-      // Back to step 1. The age stays selected and the ZIP is kept.
-      return state.status === "zip" || state.status === "error"
-        ? { ...state, status: "age" }
-        : state;
+      // Back to step 1. The age stays highlighted and the ZIP is kept.
+      return { ...state, status: "age", zipError: null };
 
     case "SET_ZIP":
       // Typing clears the old error message.
@@ -76,27 +82,38 @@ function funnelReducer(state: FunnelState, action: FunnelAction): FunnelState {
     case "SUBMIT":
       return { ...state, status: "submitting", zipError: null };
 
-    // Only accept a result while a request is actually in flight.
     case "SUBMIT_OK":
-      return state.status === "submitting"
-        ? { ...state, status: "success" }
-        : state;
+      return { ...state, status: "success" };
 
     case "SUBMIT_FAIL":
-      return state.status === "submitting"
-        ? { ...state, status: "error" }
-        : state;
+      // The answers are untouched, so the form comes back filled in.
+      return { ...state, status: "error" };
+
+    case "EDIT_ANSWERS":
+      // From the success screen back to the ZIP step, answers kept.
+      return { ...state, status: "zip" };
   }
 }
 
+// Returns an error message, or null when the ZIP code is fine.
 function validateZip(zip: string): string | null {
   if (zip === "") return "Enter your ZIP code.";
   if (!/^\d{5}$/.test(zip)) return "Enter a 5-digit ZIP code, like 02134.";
   return null;
 }
 
+// "45-54" -> "45–54" for display.
 function ageLabel(id: AgeRangeId | null): string {
-  return AGE_RANGES.find((range) => range.id === id)?.label ?? "";
+  const range = AGE_RANGES.find((item) => item.id === id);
+  return range ? range.label : "";
+}
+
+// Should this attempt fail on purpose? Only when ?mock=fail is in the URL.
+function shouldMockFail(attemptNumber: number): boolean {
+  const mock = new URLSearchParams(window.location.search).get("mock");
+  if (mock === "fail-always") return true;
+  if (mock === "fail") return attemptNumber === 1; // so "Try again" can succeed
+  return false;
 }
 
 // ---------------------------------------------------------------------------
@@ -105,63 +122,65 @@ function ageLabel(id: AgeRangeId | null): string {
 
 export function AgeZipFunnel() {
   const [state, dispatch] = useReducer(funnelReducer, initialState);
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
 
-  // Unique ids so labels, hints and errors are linked for screen readers.
-  const zipId = useId();
-  const zipHintId = `${zipId}-hint`;
-  const zipErrorId = `${zipId}-error`;
+  // Success screen: has "See my options" been pressed? (demo note only)
+  const [showNextStep, setShowNextStep] = useState(false);
 
   // Double-submit lock. A ref changes instantly (no re-render), so a second
   // click a few milliseconds later already sees `true` and stops.
   const inFlight = useRef(false);
+  const attempts = useRef(0);
 
-  // Elements we move focus to, plus the last status we handled.
-  const ageGroupRef = useRef<HTMLFieldSetElement>(null);
+  // Elements we move focus to.
+  const selectedAgeRef = useRef<HTMLButtonElement>(null);
   const zipInputRef = useRef<HTMLInputElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
   const successHeadingRef = useRef<HTMLHeadingElement>(null);
+
+  // The status we last moved focus for. Starts as the first status, so nothing
+  // gets focused when the page loads.
   const previousStatus = useRef(state.status);
 
   // Focus management: when the screen changes, put keyboard and screen reader
-  // users where the new content is. Skips the first render, so the page
-  // doesn't jump on load.
+  // users where the new content is.
   useEffect(() => {
     if (previousStatus.current === state.status) return;
     previousStatus.current = state.status;
 
+    if (state.status === "age") selectedAgeRef.current?.focus();
     if (state.status === "zip") zipInputRef.current?.focus();
-    if (state.status === "age") {
-      ageGroupRef.current
-        ?.querySelector<HTMLInputElement>("input:checked")
-        ?.focus();
-    }
     if (state.status === "error") errorRef.current?.focus();
     if (state.status === "success") successHeadingRef.current?.focus();
   }, [state.status]);
+
+  // Homepage quick start: /compare?age=45-54 skips step 1. The age was picked (and
+  // age_selected sent) on the homepage, so no event here. previousStatus is set to
+  // "zip" first, so the ZIP field is NOT focused: that would pop open the phone
+  // keyboard as soon as the page loads.
+  useEffect(() => {
+    const ageFromUrl = new URLSearchParams(window.location.search).get("age");
+    const range = AGE_RANGES.find((item) => item.id === ageFromUrl);
+    if (range) {
+      previousStatus.current = "zip";
+      dispatch({ type: "SELECT_AGE", ageRange: range.id });
+    }
+  }, []);
 
   const isSubmitting = state.status === "submitting";
 
   // -- Step 1: age ----------------------------------------------------------
 
-  function goToZip(ageRange: AgeRangeId) {
-    dispatch({ type: "GO_TO_ZIP", ageRange });
+  function selectAge(ageRange: AgeRangeId) {
+    dispatch({ type: "SELECT_AGE", ageRange });
     track("age_selected", {
-      attribution: pickAttribution(searchParams),
-      page: pathname,
+      attribution: currentAttribution(),
+      page: ROUTES.compare,
     });
-  }
-
-  // Enter on a radio, or the Continue button.
-  function handleAgeSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (state.ageRange) goToZip(state.ageRange);
   }
 
   // -- Step 2: ZIP + submit -------------------------------------------------
 
-  async function handleZipSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleZipSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (inFlight.current || !state.ageRange) return; // already sending: ignore
 
@@ -169,12 +188,13 @@ export function AgeZipFunnel() {
     if (error) {
       dispatch({ type: "ZIP_INVALID", error });
       zipInputRef.current?.focus(); // screen readers then read the error
-      return;
+      return; // no request and no event for a validation error
     }
 
     inFlight.current = true; // locked right now, before any re-render
+    attempts.current += 1;
     dispatch({ type: "SUBMIT" });
-    const attribution = pickAttribution(searchParams);
+    const attribution = currentAttribution();
 
     try {
       await submitComparison(
@@ -184,10 +204,11 @@ export function AgeZipFunnel() {
           attribution,
           submittedAt: new Date().toISOString(),
         },
-        { fail: searchParams.get("mock") === "fail" },
+        { fail: shouldMockFail(attempts.current) },
       );
+      setShowNextStep(false);
       dispatch({ type: "SUBMIT_OK" });
-      track("comparison_started", { attribution, page: pathname }); // success only
+      track("comparison_started", { attribution, page: ROUTES.compare }); // success only
     } catch {
       dispatch({ type: "SUBMIT_FAIL" }); // answers stay; "Try again" resubmits
     } finally {
@@ -196,166 +217,221 @@ export function AgeZipFunnel() {
   }
 
   // -- Render ---------------------------------------------------------------
+  // One card for every screen. id={FUNNEL_ID} lets the sticky bar and the final
+  // "Compare my options" button scroll back to it.
 
-  if (state.status === "success") {
-    return (
-      <div className="rounded-card border-line bg-surface border p-6 shadow-sm md:p-8">
-        <h3 ref={successHeadingRef} tabIndex={-1}>
-          You&apos;re all set
-        </h3>
-        <p className="text-ink-muted mt-2">
-          We&apos;ll look for options for drivers aged{" "}
-          {ageLabel(state.ageRange)} near {state.zip}.
-        </p>
-      </div>
-    );
-  }
-
-  if (state.status === "age") {
-    return (
-      <form
-        onSubmit={handleAgeSubmit}
-        className="rounded-card border-line bg-surface border p-6 shadow-sm md:p-8"
-      >
-        <p className="text-ink-muted text-sm font-semibold">Step 1 of 2</p>
-
-        <fieldset ref={ageGroupRef} className="mt-2">
-          <legend className="text-xl font-semibold">How old are you?</legend>
-
-          <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
-            {AGE_RANGES.map((range) => (
-              <label
-                key={range.id}
-                className="group rounded-card border-line bg-surface hover:border-ink-muted has-checked:border-teal-strong has-checked:bg-teal-soft has-focus-visible:outline-teal-strong flex min-h-14 cursor-pointer items-center justify-between border-2 px-5 font-semibold has-focus-visible:outline-2 has-focus-visible:outline-offset-2"
-              >
-                <input
-                  type="radio"
-                  name="ageRange"
-                  value={range.id}
-                  required
-                  checked={state.ageRange === range.id}
-                  onChange={() =>
-                    dispatch({ type: "PICK_AGE", ageRange: range.id })
-                  }
-                  // A tap or mouse click moves straight on (event.detail > 0).
-                  // Arrow keys and Space only select (event.detail is 0), so
-                  // keyboard users can look through the options, then press
-                  // Enter or Continue.
-                  onClick={(event) => {
-                    if (event.detail > 0) goToZip(range.id);
-                  }}
-                  className="sr-only"
-                />
-                {range.label}
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 20 20"
-                  className="text-teal-strong hidden size-5 group-has-checked:block"
-                >
-                  <path
-                    d="M4 10.5l4 4 8-9"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-
-        <Button type="submit" className="mt-6">
-          Continue
-        </Button>
-      </form>
-    );
-  }
-
-  // status: "zip" | "submitting" | "error"
   return (
-    <form
-      onSubmit={handleZipSubmit}
-      noValidate
-      aria-busy={isSubmitting}
+    <div
+      id={FUNNEL_ID}
       className="rounded-card border-line bg-surface border p-6 shadow-sm md:p-8"
     >
-      <p className="text-ink-muted text-sm font-semibold">Step 2 of 2</p>
+      {state.status === "success" && (
+        <SuccessScreen
+          headingRef={successHeadingRef}
+          ageText={ageLabel(state.ageRange)}
+          zip={state.zip}
+          showNextStep={showNextStep}
+          onSeeOptions={() => setShowNextStep(true)}
+          onEditAnswers={() => dispatch({ type: "EDIT_ANSWERS" })}
+        />
+      )}
 
-      <p className="mt-2">
-        Age: <span className="font-semibold">{ageLabel(state.ageRange)}</span>{" "}
-        <button
-          type="button"
-          onClick={() => dispatch({ type: "CHANGE_AGE" })}
-          disabled={isSubmitting}
-          className="text-teal-strong hover:text-ink font-semibold underline underline-offset-4 disabled:opacity-60"
-        >
-          Change<span className="sr-only"> age range</span>
-        </button>
-      </p>
+      {state.status === "age" && (
+        <>
+          <StepIndicator step={1} />
+          <fieldset className="mt-5 md:mt-6">
+            <legend className="text-xl font-semibold md:text-2xl">
+              How old are you?
+            </legend>
+            {/* Hidden on phones so all six ages fit on the first screen. */}
+            <p className="text-ink-muted mt-2 hidden text-lg md:block">
+              Choose your age range to see options for drivers like you.
+            </p>
 
-      <label
-        htmlFor={zipId}
-        className="mt-6 mb-2 block text-base font-semibold"
+            {/* Buttons, not radios: one tap (or Enter) picks an age and moves on. */}
+            <div className="mt-4 grid grid-cols-2 gap-3 md:mt-5 md:grid-cols-3">
+              {AGE_RANGES.map((range) => {
+                const isSelected = range.id === state.ageRange;
+                return (
+                  <ChoiceButton
+                    key={range.id}
+                    // Only the selected age gets the ref, so "Change" can focus it.
+                    ref={isSelected ? selectedAgeRef : undefined}
+                    label={range.label}
+                    selected={isSelected}
+                    onClick={() => selectAge(range.id)}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Say what comes next, and what we don't ask for, before they commit. */}
+            <p className="text-ink-muted mt-4 flex gap-2 text-base">
+              <ArrowRightIcon className="text-teal-strong mt-0.5 size-5 shrink-0" />
+              <span>
+                Next: your ZIP code. No name, phone number or email needed.
+              </span>
+            </p>
+          </fieldset>
+        </>
+      )}
+
+      {/* ZIP step. Also shown while submitting and after a failed request. */}
+      {(state.status === "zip" ||
+        state.status === "submitting" ||
+        state.status === "error") && (
+        <>
+          <StepIndicator step={2} />
+          <form noValidate onSubmit={handleZipSubmit} className="mt-6">
+            {/* The chosen age, with a way back to change it */}
+            <div className="bg-cream flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-xl px-4 py-3">
+              <p className="text-lg">
+                <span className="text-ink-muted">Age range: </span>
+                <span className="font-semibold">
+                  {ageLabel(state.ageRange)}
+                </span>
+              </p>
+              <Button
+                variant="text"
+                onClick={() => dispatch({ type: "CHANGE_AGE" })}
+                disabled={isSubmitting}
+                className="min-h-11"
+              >
+                Change<span className="sr-only"> age range</span>
+              </Button>
+            </div>
+
+            <TextField
+              ref={zipInputRef}
+              id="zip"
+              label="What's your ZIP code?"
+              helper="5 digits, like 02134. We use it to find options in your area."
+              error={state.zipError}
+              value={state.zip}
+              onChange={(event) =>
+                dispatch({ type: "SET_ZIP", zip: event.target.value })
+              }
+              readOnly={isSubmitting}
+              type="text"
+              inputMode="numeric"
+              autoComplete="postal-code"
+              maxLength={5}
+              className="mt-5"
+            />
+
+            {state.status === "error" && (
+              // role="alert" makes screen readers announce it right away.
+              <div
+                ref={errorRef}
+                tabIndex={-1}
+                role="alert"
+                className="border-error bg-surface mt-5 flex gap-3 rounded-xl border-2 p-4"
+              >
+                <AlertIcon className="text-error mt-0.5 size-5 shrink-0" />
+                <div>
+                  <p className="text-base font-semibold">
+                    We couldn&apos;t reach our comparison service.
+                  </p>
+                  <p className="text-ink-muted mt-1 text-base">
+                    Your answers are saved. Try again in a moment.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              fullWidth
+              loading={isSubmitting}
+              loadingLabel="Finding options…"
+              className="mt-5"
+            >
+              {state.status === "error" ? "Try again" : CTA_LABEL}
+            </Button>
+            <NotInsurerNote />
+          </form>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Small pieces
+// ---------------------------------------------------------------------------
+
+// "Step 1 of 2" with a two-part progress bar. The bar is decoration (aria-hidden);
+// the text says the same thing.
+function StepIndicator({ step }: { step: 1 | 2 }) {
+  return (
+    <div>
+      <p className="text-ink-muted text-sm font-semibold">Step {step} of 2</p>
+      <div aria-hidden="true" className="mt-2 grid grid-cols-2 gap-1.5">
+        <span className="bg-teal-strong h-1.5 rounded-full" />
+        <span
+          className={
+            step === 2
+              ? "bg-teal-strong h-1.5 rounded-full"
+              : "bg-line h-1.5 rounded-full"
+          }
+        />
+      </div>
+    </div>
+  );
+}
+
+// Shown after a successful request. Replaces the form inside the same card.
+function SuccessScreen({
+  headingRef,
+  ageText,
+  zip,
+  showNextStep,
+  onSeeOptions,
+  onEditAnswers,
+}: {
+  headingRef: React.Ref<HTMLHeadingElement>;
+  ageText: string;
+  zip: string;
+  showNextStep: boolean;
+  onSeeOptions: () => void;
+  onEditAnswers: () => void;
+}) {
+  return (
+    <div>
+      <span className="bg-teal-soft text-teal-strong flex size-14 items-center justify-center rounded-full">
+        <CheckIcon className="size-7" />
+      </span>
+
+      {/* tabIndex -1 so focus can be moved here when this screen appears */}
+      <h2
+        ref={headingRef}
+        tabIndex={-1}
+        className="mt-5 text-2xl font-bold md:text-3xl"
       >
-        What&apos;s your ZIP code?
-      </label>
-      <input
-        ref={zipInputRef}
-        id={zipId}
-        type="text"
-        inputMode="numeric"
-        autoComplete="postal-code"
-        maxLength={5}
-        value={state.zip}
-        onChange={(event) =>
-          dispatch({ type: "SET_ZIP", zip: event.target.value })
-        }
-        readOnly={isSubmitting}
-        aria-invalid={state.zipError ? true : undefined}
-        aria-describedby={
-          state.zipError ? `${zipHintId} ${zipErrorId}` : zipHintId
-        }
-        className="border-ink-muted bg-surface hover:border-ink focus-visible:border-teal-strong aria-invalid:border-error min-h-12 w-full rounded-xl border-2 px-4 text-lg tracking-widest"
-      />
-      <p id={zipHintId} className="text-ink-muted mt-2 text-sm">
-        5 digits, like 02134
+        You&apos;re all set
+      </h2>
+      <p className="mt-3 text-lg">
+        Your comparison has started for drivers aged {ageText} in ZIP code {zip}
+        . Next, choose which insurers you&apos;d like to hear from, if any.
       </p>
-      {state.zipError && (
-        <p id={zipErrorId} className="text-error mt-2 text-sm font-medium">
-          {state.zipError}
+
+      <Button fullWidth className="mt-6" onClick={onSeeOptions}>
+        See my options
+        <ArrowRightIcon />
+      </Button>
+
+      {/* This is a demo, so there are no real options to open. */}
+      {showNextStep && (
+        <p role="status" className="bg-cream mt-4 rounded-xl p-4 text-base">
+          <Badge className="mr-2">Demo</Badge>
+          In the live service, options from insurers that serve your area would
+          open here. Nothing was sent to an insurer.
         </p>
       )}
 
-      {state.status === "error" && (
-        <div
-          ref={errorRef}
-          tabIndex={-1}
-          role="alert"
-          className="border-error bg-surface mt-6 rounded-xl border-2 p-4"
-        >
-          <p className="font-semibold">
-            We couldn&apos;t reach our comparison service.
-          </p>
-          <p className="text-ink-muted">
-            Your answers are saved. Please try again.
-          </p>
-        </div>
-      )}
-
-      <Button type="submit" disabled={isSubmitting} className="mt-6">
-        {isSubmitting
-          ? "Finding options…"
-          : state.status === "error"
-            ? "Try again"
-            : CTA_LABEL}
+      <Button variant="text" className="mt-5 min-h-11" onClick={onEditAnswers}>
+        Change my answers
       </Button>
-
-      <p className="text-ink-muted mt-3 text-sm">
-        Free to use. ClearLane is a comparison and referral service, not an
-        insurer.
-      </p>
-    </form>
+    </div>
   );
 }

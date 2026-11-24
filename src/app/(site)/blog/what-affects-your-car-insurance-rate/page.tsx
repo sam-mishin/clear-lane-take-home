@@ -17,10 +17,12 @@ export const metadata: Metadata = {
 // Route: /blog/what-affects-your-car-insurance-rate
 // Task 3. Content lives in lib/content/articles.ts; the TOC is built from the same sections.
 export default function ArticlePage() {
+  // Table of contents: one link per section, made from the same data as the body.
   const toc = article.sections.map(({ id, heading }) => ({
     id,
     label: heading,
   }));
+  // Related articles: every card except this article's own.
   const related = articles.filter((a) => a.href !== ROUTES.article);
 
   return (
@@ -41,6 +43,7 @@ export default function ArticlePage() {
 
           {article.sections.map((section) => (
             <section key={section.id} aria-labelledby={section.id}>
+              {/* scroll-mt-24 stops the TOC link from hiding the heading under the sticky header */}
               <h2 id={section.id} className="scroll-mt-24">
                 {section.heading}
               </h2>

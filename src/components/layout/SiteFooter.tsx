@@ -16,6 +16,7 @@ export function SiteFooter({
   const campaign = variant === "campaign";
   return (
     <footer className="bg-ink text-cream">
+      {/* On /compare, extra bottom space (pb-28) so the sticky phone bar never covers the text */}
       <Container
         className={clsx("pt-12 md:py-16", campaign ? "pb-28" : "pb-12")}
       >
@@ -26,6 +27,7 @@ export function SiteFooter({
               A clearer road to your next policy.
             </p>
           </div>
+          {/* Page links: on every page except /compare */}
           {!campaign && (
             <nav aria-label="Footer">
               <ul className="flex flex-col gap-1 md:flex-row md:gap-8">
@@ -44,6 +46,7 @@ export function SiteFooter({
           )}
         </div>
 
+        {/* The disclosure: what ClearLane is and isn't, and that the brand is fictional */}
         <div className="mt-10 border-t border-white/15 pt-8">
           <h2 className="text-base font-semibold">About ClearLane</h2>
           <p className="text-on-ink-muted mt-2 max-w-3xl text-sm">

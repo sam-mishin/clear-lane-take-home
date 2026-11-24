@@ -1,12 +1,18 @@
 import { ATTRIBUTION_KEYS, type Attribution } from "@/lib/attribution";
 
+// Mock analytics. Events are logged to the browser console instead of being sent anywhere.
+// Events only ever carry the page and the campaign params, never the person's answers.
+
+// The only two events the funnel sends.
 export type EventName = "age_selected" | "comparison_started";
 
+// What a caller passes in.
 export type EventProps = {
   attribution: Attribution;
   page: string;
 };
 
+// What gets logged.
 export type AnalyticsEvent = {
   name: EventName;
   page: string;
@@ -14,6 +20,7 @@ export type AnalyticsEvent = {
   timestamp: string; // ISO
 };
 
+// Build the event, keep only the campaign keys, log it, and return it.
 export function track(name: EventName, props: EventProps): AnalyticsEvent {
   const event: AnalyticsEvent = {
     name,

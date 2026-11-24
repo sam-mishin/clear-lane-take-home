@@ -54,6 +54,7 @@ export default function HomePage() {
       <section aria-labelledby="resources-heading" className="py-16">
         <Container>
           <h2 id="resources-heading">TODO: resources heading</h2>
+          {/* One card per article in lib/content/articles.ts */}
           {articles.map((article) => (
             <ArticleCard key={article.title} article={article} />
           ))}
