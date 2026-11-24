@@ -4,7 +4,7 @@ Three connected pages for ClearLane Auto, a fictional auto insurance comparison 
 
 Live preview: not deployed (optional in the brief). Run it locally with the steps below.
 
-Design file: [ClearLane Auto: components](https://claude.ai/artifact/EiQHuKCV1dWSzBp4C2z9m8). Every component and state, plus all three pages at 375px and 1440px, rendered from this code.
+Design file: [ClearLane Auto: components](https://claude.ai/artifact/EiQHuKCV1dWSzBp4C2z9m8?sk=OAXNDsqbSXv2-tQEOUpIKw#page-dcb81aee8d83). Every component and state, plus all three pages at 375px and 1440px, rendered from this code.
 
 ## Run it
 
