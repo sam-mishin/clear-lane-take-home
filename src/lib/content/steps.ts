@@ -8,5 +8,18 @@ export const howItWorks: Step[] = [
   { title: "Choose what fits", body: "TODO" },
 ];
 
-// Landing page "What happens next". TODO: write the three steps.
-export const whatHappensNext: Step[] = [];
+// Landing page "What happens next".
+export const whatHappensNext: Step[] = [
+  {
+    title: "Answer two questions",
+    body: "Pick your age range and enter your ZIP code. You can change either answer before you continue.",
+  },
+  {
+    title: "See what's available",
+    body: "We show options from insurers that serve your area, with the coverage terms explained.",
+  },
+  {
+    title: "Decide in your own time",
+    body: "Contact an insurer only if something fits. There's no obligation and nothing to cancel.",
+  },
+];

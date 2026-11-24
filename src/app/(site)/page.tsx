@@ -8,10 +8,17 @@ import { Faq } from "@/components/Faq";
 import { homeFaq } from "@/lib/content/faq";
 import { howItWorks } from "@/lib/content/steps";
 import { articles } from "@/lib/content/articles";
+import { openGraph } from "@/lib/metadata";
+
+const title = "ClearLane Auto | A clearer road to your next policy";
+const description =
+  "See how car insurance coverage types differ, learn what affects your rate, and start a free comparison. Plain language, no obligation.";
 
 export const metadata: Metadata = {
-  // Root layout's title.default ("ClearLane Auto") is used unless you set one here.
-  description: "TODO: homepage meta description.",
+  // absolute: skip the layout's "%s | ClearLane Auto" template so the brand isn't doubled.
+  title: { absolute: title },
+  description,
+  openGraph: openGraph(title, description),
 };
 
 // Route: /

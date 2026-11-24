@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { openGraph, SITE_DESCRIPTION, SITE_NAME } from "@/lib/metadata";
 
 const brandFont = Plus_Jakarta_Sans({
   variable: "--font-brand",
@@ -10,10 +11,13 @@ const brandFont = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: "ClearLane Auto",
-    template: "%s | ClearLane Auto",
+    default: SITE_NAME,
+    template: `%s | ${SITE_NAME}`,
   },
-  description: "TODO: site-wide fallback description.",
+  // Fallback for any route that doesn't set its own.
+  description: SITE_DESCRIPTION,
+  openGraph: openGraph(SITE_NAME, SITE_DESCRIPTION),
+  // Favicon, icon.svg and apple-icon.png live in src/app/ and are added by Next.js.
 };
 
 // Root layout: wraps every route. Route groups (site) and (campaign)

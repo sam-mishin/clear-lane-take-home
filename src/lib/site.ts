@@ -16,9 +16,9 @@ export const NAV_LINKS = [
 // The brief's primary action. Use this constant, never a hand-typed label.
 export const CTA_LABEL = "Compare my options";
 
-// TODO: final wording of the disclosure (comparison and referral service, not an insurer;
-// the brand is fictional).
-export const DISCLOSURE = "TODO: disclosure";
+// Footer disclosure on every page. (The "fictional brand" line is FICTIONAL_NOTE below.)
+export const DISCLOSURE =
+  "ClearLane Auto is a comparison and referral service, not an insurance company. We don't issue policies, set rates or handle claims. Coverage, prices and eligibility are decided by each insurer.";
 
 // Short version, shown under every funnel button (NotInsurerNote).
 export const NOT_AN_INSURER =
