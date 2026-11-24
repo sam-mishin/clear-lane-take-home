@@ -1,0 +1,16 @@
+import clsx from "clsx";
+
+// Shared page-width wrapper so every section lines up.
+export function Container({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={clsx("mx-auto w-full max-w-6xl px-5 md:px-8", className)}>
+      {children}
+    </div>
+  );
+}
