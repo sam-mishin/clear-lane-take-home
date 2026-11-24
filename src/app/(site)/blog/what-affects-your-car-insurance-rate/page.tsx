@@ -163,7 +163,7 @@ export default function ArticlePage() {
           <h2 id="related-heading" className="text-2xl md:text-4xl">
             Related articles
           </h2>
-          <ul className="mt-10 grid gap-6 md:grid-cols-2 md:gap-8 lg:max-w-4xl">
+          <ul className="reveal-stagger mt-10 grid gap-6 md:grid-cols-2 md:gap-8 lg:max-w-4xl">
             {related.map((item) => (
               <li key={item.title}>
                 <ArticleCard article={item} onArticlePage />

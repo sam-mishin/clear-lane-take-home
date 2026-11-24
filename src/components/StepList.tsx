@@ -16,11 +16,13 @@ export function StepList({
   circle?: "soft" | "white";
 }) {
   return (
-    <ol className="relative mt-10 grid gap-8 md:mt-14 md:grid-cols-3">
+    // lane-track + reveal-stagger: the lane draws itself and the steps arrive in
+    // order as the list scrolls into view (globals.css, CSS only).
+    <ol className="lane-track reveal-stagger relative mt-10 grid gap-8 md:mt-14 md:grid-cols-3">
       {/* The lane line, md and up: one dashed line behind all three drawings. */}
       <span
         aria-hidden="true"
-        className="border-teal absolute inset-x-1/6 top-16 hidden border-t-4 border-dashed md:block"
+        className="border-teal lane-draw-x absolute inset-x-1/6 top-16 hidden border-t-4 border-dashed md:block"
       />
 
       {steps.map((step, index) => (
@@ -32,13 +34,13 @@ export function StepList({
           {index < steps.length - 1 && (
             <span
               aria-hidden="true"
-              className="border-teal absolute top-22 -bottom-8 left-10.5 border-l-4 border-dashed md:hidden"
+              className="border-teal lane-draw-y absolute top-22 -bottom-8 left-10.5 border-l-4 border-dashed md:hidden"
             />
           )}
           <Spot
             name={step.illustration}
             circle={circle}
-            className="size-22 md:size-33"
+            className="spot-pop size-22 md:size-33"
           />
           <div className="pt-2 md:pt-0">
             <p className="text-teal-strong text-sm font-bold md:mt-5">

@@ -18,7 +18,7 @@ export function FinalCtaBand({
       className="py-16 md:py-24"
     >
       <Container>
-        <div className="rounded-card bg-ink text-cream relative overflow-hidden px-6 py-12 text-center md:px-12 md:py-16">
+        <div className="rounded-card bg-ink text-cream reveal relative overflow-hidden px-6 py-12 text-center md:px-12 md:py-16">
           {/* Lane lines sit behind the text; "relative" on the text keeps it on top. */}
           <RoadLines />
           <div className="relative">

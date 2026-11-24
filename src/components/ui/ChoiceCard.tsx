@@ -32,7 +32,8 @@ function CheckMark({ visible }: { visible: boolean }) {
     <span
       className={clsx(
         "bg-teal-strong flex size-6 shrink-0 items-center justify-center rounded-full text-white",
-        !visible && "invisible",
+        // Pops in when a card becomes selected (off with reduced motion).
+        visible ? "motion-safe:animate-pop" : "invisible",
       )}
     >
       <CheckIcon className="size-4" />

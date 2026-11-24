@@ -159,7 +159,7 @@ export default function HomePage() {
             title="Good reasons to look around"
             lead="Shopping around is the simplest way to understand what's available to you."
           />
-          <ul className="divide-line divide-y">
+          <ul className="divide-line reveal-stagger divide-y">
             {whyCompare.map((reason) => (
               <li
                 key={reason.title}
@@ -194,7 +194,7 @@ export default function HomePage() {
             title="Learn before you compare"
             lead="Short, plain-language guides to the parts of car insurance that trip people up."
           />
-          <ul className="mt-10 grid gap-6 md:mt-12 md:grid-cols-3 md:gap-8">
+          <ul className="reveal-stagger mt-10 grid gap-6 md:mt-12 md:grid-cols-3 md:gap-8">
             {/* One card per article in lib/content/articles.ts */}
             {articles.map((article) => (
               <li key={article.title}>

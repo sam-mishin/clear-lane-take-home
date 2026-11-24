@@ -18,7 +18,7 @@ export function CoverageExplorer() {
   const selected = coverageExamples[selectedIndex];
 
   return (
-    <div className="mt-10 grid gap-6 md:mt-12 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-8">
+    <div className="reveal mt-10 grid gap-6 md:mt-12 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-8">
       {/* Left: the three options */}
       <fieldset>
         <legend className="mb-4 text-lg font-semibold">

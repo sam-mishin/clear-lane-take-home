@@ -125,6 +125,17 @@ function shouldMockFail(attemptNumber: number): boolean {
   return false;
 }
 
+// Arriving from the homepage adds ?age=45-54 to the URL. Once the person picks an age
+// here, that value is out of date (a reload would reopen the old age), so take it out
+// of the address bar. The campaign params stay. replaceState changes the URL without a
+// new history entry; passing the current state keeps Next.js's data in it.
+function removeAgeFromUrl() {
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has("age")) return;
+  url.searchParams.delete("age");
+  window.history.replaceState(window.history.state, "", url);
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -170,9 +181,9 @@ export function AgeZipFunnel() {
   }, [state.status]);
 
   // Homepage quick start: /compare?age=45-54 skips step 1. The age was picked (and
-  // age_selected sent) on the homepage, so no event here. previousStatus is set to
-  // "zip" first, so the ZIP field is NOT focused: that would pop open the phone
-  // keyboard as soon as the page loads.
+  // age_selected sent) on the homepage, so age_selected isn't sent again here.
+  // previousStatus is set to "zip" first, so the ZIP field is NOT focused: that
+  // would pop open the phone keyboard as soon as the page loads.
   // zip_step_viewed is logged here, since the ZIP step is the first thing they see.
   useEffect(() => {
     if (prefillDone.current) return;
@@ -213,6 +224,7 @@ export function AgeZipFunnel() {
 
   function selectAge(ageRange: AgeRangeId) {
     dispatch({ type: "SELECT_AGE", ageRange });
+    removeAgeFromUrl(); // the age chosen here replaces any ?age= from the homepage
     // A history entry for the ZIP step (same URL), so Back returns to step 1.
     // Next.js supports calling pushState directly and keeps its own data in the entry.
     window.history.pushState({ funnelStep: "zip" }, "");
@@ -297,8 +309,9 @@ export function AgeZipFunnel() {
         />
       )}
 
+      {/* Each screen slides in when it appears (motion-safe: off with reduced motion). */}
       {state.status === "age" && (
-        <>
+        <div className="motion-safe:animate-step-in">
           <StepIndicator step={1} />
           <fieldset className="mt-5 md:mt-6">
             <legend className="text-xl font-semibold md:text-2xl">
@@ -334,14 +347,14 @@ export function AgeZipFunnel() {
               </span>
             </p>
           </fieldset>
-        </>
+        </div>
       )}
 
       {/* ZIP step. Also shown while submitting and after a failed request. */}
       {(state.status === "zip" ||
         state.status === "submitting" ||
         state.status === "error") && (
-        <>
+        <div className="motion-safe:animate-step-in">
           <StepIndicator step={2} />
           <form noValidate onSubmit={handleZipSubmit} className="mt-6">
             {/* The chosen age, with a way back to change it */}
@@ -414,7 +427,7 @@ export function AgeZipFunnel() {
             </Button>
             <NotInsurerNote />
           </form>
-        </>
+        </div>
       )}
     </div>
   );
@@ -432,13 +445,12 @@ function StepIndicator({ step }: { step: 1 | 2 }) {
       <p className="text-ink-muted text-sm font-semibold">Step {step} of 2</p>
       <div aria-hidden="true" className="mt-2 grid grid-cols-2 gap-1.5">
         <span className="bg-teal-strong h-1.5 rounded-full" />
-        <span
-          className={
-            step === 2
-              ? "bg-teal-strong h-1.5 rounded-full"
-              : "bg-line h-1.5 rounded-full"
-          }
-        />
+        {/* Second half: on step 2 its teal fill grows in from the left. */}
+        <span className="bg-line h-1.5 overflow-hidden rounded-full">
+          {step === 2 && (
+            <span className="bg-teal-strong motion-safe:animate-fill block h-full origin-left rounded-full" />
+          )}
+        </span>
       </div>
     </div>
   );
@@ -461,9 +473,10 @@ function SuccessScreen({
   onEditAnswers: () => void;
 }) {
   return (
-    <div>
-      <span className="bg-teal-soft text-teal-strong flex size-14 items-center justify-center rounded-full">
-        <CheckIcon className="size-7" />
+    <div className="motion-safe:animate-step-in">
+      {/* The circle pops in and the check draws itself (off with reduced motion). */}
+      <span className="bg-teal-soft text-teal-strong motion-safe:animate-pop flex size-14 items-center justify-center rounded-full">
+        <CheckIcon className="draw-check size-7" />
       </span>
 
       {/* tabIndex -1 so focus can be moved here when this screen appears */}

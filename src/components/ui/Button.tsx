@@ -10,9 +10,10 @@ import { SpinnerIcon } from "@/components/ui/Icons";
 export type ButtonVariant = "primary" | "secondary" | "onDark" | "text";
 export type ButtonSize = "md" | "sm";
 
-// Shared by every variant: pill shape, bold label, smooth color change, dimmed when disabled.
+// Shared by every variant: pill shape, bold label, smooth color change, a slight
+// press-down when clicked (active:scale-98), dimmed when disabled.
 const BASE_CLASSES =
-  "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-colors duration-150 motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition duration-150 active:scale-98 motion-reduce:transition-none motion-reduce:active:scale-100 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100";
 
 // Colors for each variant, including its hover color.
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {

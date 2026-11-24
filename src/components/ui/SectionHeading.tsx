@@ -17,7 +17,8 @@ export function SectionHeading({
   className?: string;
 }) {
   return (
-    <div className={clsx("max-w-2xl", className)}>
+    // "reveal": fades up as it scrolls into view (globals.css, CSS only).
+    <div className={clsx("reveal max-w-2xl", className)}>
       {eyebrow && (
         <p className="text-teal-strong mb-3 text-sm font-semibold">{eyebrow}</p>
       )}

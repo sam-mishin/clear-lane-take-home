@@ -40,6 +40,43 @@
   /* Motion: the coverage explorer's panel fades up when the example changes.
      Used as motion-safe:animate-fade-up, so it's off with reduced motion. */
   --animate-fade-up: fade-up 200ms ease-out;
+
+  /* Funnel: each step slides in when it appears; the progress bar's second half
+     fills on step 2; the success check pops. Used as motion-safe:animate-*. */
+  --animate-step-in: step-in 250ms ease-out;
+  --animate-fill: fill-x 400ms ease-out;
+  --animate-pop: pop 250ms ease-out;
+  @keyframes step-in {
+    from {
+      opacity: 0;
+      transform: translateX(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  @keyframes fill-x {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+  @keyframes pop {
+    0% {
+      transform: scale(0.6);
+      opacity: 0;
+    }
+    70% {
+      transform: scale(1.08);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
   @keyframes fade-up {
     from {
       opacity: 0;
@@ -126,6 +163,138 @@
       details[open]::details-content {
         block-size: auto;
       }
+    }
+  }
+}
+
+/*
+  Scroll motion, no JavaScript. Uses CSS scroll-driven animations: the animation's
+  progress follows the page's scroll position instead of a clock.
+  - Only runs when the browser supports it (@supports) and the visitor hasn't asked
+    for reduced motion. Everyone else sees everything in place, fully visible.
+  - Content is never hidden waiting for a script: if the animation can't run,
+    there's nothing to undo.
+*/
+@layer components {
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      /* A block fades and rises into place as it scrolls into view. */
+      .reveal {
+        animation: reveal linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 45%;
+      }
+
+      /* A row of cards or steps: each item arrives a little after the one before. */
+      .reveal-stagger > li {
+        animation: reveal linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 45%;
+      }
+      .reveal-stagger > li:nth-of-type(2) {
+        animation-range: entry 10% entry 55%;
+      }
+      .reveal-stagger > li:nth-of-type(3) {
+        animation-range: entry 20% entry 65%;
+      }
+
+      /* Step drawings pop in, in order, with their step. */
+      .reveal-stagger > li .spot-pop {
+        animation: spot-pop linear both;
+        animation-timeline: view();
+        animation-range: entry 10% entry 60%;
+      }
+      .reveal-stagger > li:nth-of-type(2) .spot-pop {
+        animation-range: entry 20% entry 70%;
+      }
+      .reveal-stagger > li:nth-of-type(3) .spot-pop {
+        animation-range: entry 30% entry 80%;
+      }
+
+      /* The dashed lane between the steps draws itself as the steps scroll in.
+         Desktop: left to right, timed to the whole list (.lane-track).
+         Phones: each segment top to bottom, timed to itself. */
+      .lane-track {
+        view-timeline-name: --lane;
+      }
+      .lane-draw-x {
+        animation: draw-x linear both;
+        animation-timeline: --lane;
+        animation-range: entry 30% cover 45%;
+      }
+      .lane-draw-y {
+        animation: draw-y linear both;
+        animation-timeline: view();
+        animation-range: entry 10% cover 55%;
+      }
+    }
+
+    /* The header picks up a soft shadow once the page has scrolled 80px. */
+    @supports (animation-timeline: scroll()) {
+      .header-shadow {
+        animation: header-shadow linear both;
+        animation-timeline: scroll();
+        animation-range: 0 80px;
+      }
+    }
+
+    /* The success check draws itself (stroke-dashoffset 24 -> 0). */
+    .draw-check path {
+      stroke-dasharray: 24;
+      stroke-dashoffset: 24;
+      animation: draw-check 400ms 150ms ease-out forwards;
+    }
+  }
+
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes spot-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  /* Drawn by uncovering the line (clip-path), not stretching it, so the
+     dashes keep their shape while it draws. */
+  @keyframes draw-x {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+  @keyframes draw-y {
+    from {
+      clip-path: inset(0 0 100% 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+  @keyframes header-shadow {
+    from {
+      box-shadow: 0 0 0 rgb(18 35 63 / 0);
+    }
+    to {
+      box-shadow: 0 6px 20px rgb(18 35 63 / 0.08);
+    }
+  }
+  @keyframes draw-check {
+    to {
+      stroke-dashoffset: 0;
     }
   }
 }

@@ -47,7 +47,8 @@ export function SiteHeader() {
   return (
     <header
       className={clsx(
-        "sticky top-0 z-40 border-b backdrop-blur",
+        // header-shadow: a soft shadow fades in once the page scrolls (globals.css, CSS only).
+        "header-shadow sticky top-0 z-40 border-b backdrop-blur",
         // Homepage: same teal as the hero below it, so the two read as one block.
         pathname === ROUTES.home
           ? "bg-teal-soft/95 border-transparent"

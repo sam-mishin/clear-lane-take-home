@@ -7,7 +7,7 @@ import { ChevronDownIcon } from "@/components/ui/Icons";
 export function Faq({ items }: { items: FaqItem[] }) {
   return (
     // A white card with a soft shadow, so the questions stand out from the section.
-    <div className="divide-line rounded-card bg-surface shadow-card divide-y px-5 md:px-8">
+    <div className="divide-line rounded-card bg-surface shadow-card reveal divide-y px-5 md:px-8">
       {items.map((item) => (
         // "group" lets the chevron below react when this <details> is open.
         <details key={item.question} className="group">

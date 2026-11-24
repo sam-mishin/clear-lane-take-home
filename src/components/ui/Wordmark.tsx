@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { AttributedLink } from "@/components/AttributedLink";
 import clsx from "clsx";
 
 // Text wordmark with a small "two lanes" mark, per the design system's logo rules:
@@ -7,8 +7,9 @@ import clsx from "clsx";
 export function Wordmark({ tone = "light" }: { tone?: "light" | "dark" }) {
   const dark = tone === "dark";
   return (
-    // The wordmark is also the link back to the homepage.
-    <Link
+    // The wordmark is also the link back to the homepage. AttributedLink keeps the
+    // campaign params (utm_source, utm_campaign, click_id), like every other link.
+    <AttributedLink
       href="/"
       className={clsx(
         "inline-flex min-h-11 shrink-0 items-center gap-2 text-xl font-extrabold tracking-tight whitespace-nowrap",
@@ -30,7 +31,7 @@ export function Wordmark({ tone = "light" }: { tone?: "light" | "dark" }) {
           Auto
         </span>
       </span>
-    </Link>
+    </AttributedLink>
   );
 }
 
