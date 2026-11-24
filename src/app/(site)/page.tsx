@@ -6,6 +6,9 @@ import { CoverageExplorer } from "@/components/home/CoverageExplorer";
 import { ArticleCard } from "@/components/ArticleCard";
 import { Faq } from "@/components/Faq";
 import { homeFaq } from "@/lib/content/faq";
+import { howItWorks } from "@/lib/content/steps";
+import { articles } from "@/lib/content/articles";
+import { CTA_LABEL } from "@/lib/site";
 
 export const metadata: Metadata = {
   // Root layout's title.default ("ClearLane Auto") is used unless you set one here.
@@ -21,7 +24,7 @@ export default function HomePage() {
       <section aria-labelledby="hero-heading" className="py-16">
         <Container>
           <h1 id="hero-heading">TODO: hero headline</h1>
-          <CompareLink>Compare my options</CompareLink>
+          <CompareLink>{CTA_LABEL}</CompareLink>
         </Container>
       </section>
 
@@ -29,7 +32,7 @@ export default function HomePage() {
       <section aria-labelledby="how-heading" className="py-16">
         <Container>
           <h2 id="how-heading">How it works</h2>
-          <StepList />
+          <StepList steps={howItWorks} />
         </Container>
       </section>
 
@@ -52,7 +55,9 @@ export default function HomePage() {
       <section aria-labelledby="resources-heading" className="py-16">
         <Container>
           <h2 id="resources-heading">TODO: resources heading</h2>
-          <ArticleCard />
+          {articles.map((article) => (
+            <ArticleCard key={article.title} article={article} />
+          ))}
         </Container>
       </section>
 
@@ -68,7 +73,7 @@ export default function HomePage() {
       <section aria-labelledby="final-cta-heading" className="py-16">
         <Container>
           <h2 id="final-cta-heading">TODO: final CTA heading</h2>
-          <CompareLink>Compare my options</CompareLink>
+          <CompareLink>{CTA_LABEL}</CompareLink>
         </Container>
       </section>
     </>

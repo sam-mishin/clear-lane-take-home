@@ -5,6 +5,7 @@ import { AgeZipFunnel } from "@/components/funnel/AgeZipFunnel";
 import { StepList } from "@/components/StepList";
 import { Faq } from "@/components/Faq";
 import { compareFaq } from "@/lib/content/faq";
+import { whatHappensNext } from "@/lib/content/steps";
 
 export const metadata: Metadata = {
   title: "TODO: landing page title",
@@ -13,7 +14,8 @@ export const metadata: Metadata = {
 
 // Route: /compare
 // Task 1 (priority). Visitor arrives from the ad "Compare auto insurance options for your age."
-// Test URL: /compare?utm_source=fb&utm_campaign=age_test&click_id=abc123&debug=1
+// Test URLs: /compare?utm_source=fb&utm_campaign=age_test&click_id=abc123
+//            add &mock=fail to force the request error
 export default function ComparePage() {
   return (
     <>
@@ -33,7 +35,7 @@ export default function ComparePage() {
       <section aria-labelledby="next-heading" className="py-16">
         <Container>
           <h2 id="next-heading">What happens next</h2>
-          <StepList />
+          <StepList steps={whatHappensNext} />
         </Container>
       </section>
 

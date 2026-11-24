@@ -11,7 +11,7 @@
 // - focus management between steps
 // - double-submit guard (disabled + useRef)
 // - loading / success / error + retry; comparison_started only on success
-// - payload includes attribution
+// - payload includes attribution; ?mock=fail in the URL makes submitComparison() fail
 
 import type { AgeRangeId } from "@/lib/ageRanges";
 

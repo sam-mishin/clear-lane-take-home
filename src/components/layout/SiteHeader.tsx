@@ -3,22 +3,14 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/ui/Wordmark";
 import { Container } from "@/components/ui/Container";
-
-export const NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/compare", label: "Compare" },
-  {
-    href: "/blog/what-affects-your-car-insurance-rate",
-    label: "What affects your rate",
-  },
-] as const;
+import { NAV_LINKS } from "@/lib/site";
 
 // Header for (site) pages.
 // TODO:
 // - Mobile menu: <button aria-expanded aria-controls="mobile-nav">, Escape closes and
 //   returns focus to the button, closes on link click / route change.
 // - aria-current="page" on the active link (usePathname).
-// - The "Compare" link and CTA should carry attribution (use CompareLink).
+// - The Compare link and the header CTA use CompareLink so campaign params carry through.
 export function SiteHeader() {
   return (
     <header className="border-line border-b">

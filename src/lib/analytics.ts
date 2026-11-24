@@ -1,22 +1,41 @@
-// Mock analytics. Logs to the console and feeds the debug panel.
-// Rules from the brief:
-// - No personal answers (age, ZIP) in event props.
-// - comparison_started fires ONLY after a successful mock submission.
-// - Call track() from event handlers / after await, never in useEffect
-//   (Strict Mode runs effects twice in dev).
-
-import type { Attribution } from "@/lib/attribution";
+import { ATTRIBUTION_KEYS, type Attribution } from "@/lib/attribution";
 
 export type EventName = "age_selected" | "comparison_started";
 
-export type AnalyticsEvent = {
-  name: EventName;
+export type EventProps = {
   attribution: Attribution;
   page: string;
-  timestamp: string;
 };
 
-// TODO: console.info the event and push it to a store the DebugPanel can subscribe to.
-export function track(_name: EventName): void {
-  throw new Error("track() not implemented yet");
+export type AnalyticsEvent = {
+  name: EventName;
+  page: string;
+  attribution: Attribution;
+  timestamp: string; // ISO
+};
+
+export function track(name: EventName, props: EventProps): AnalyticsEvent {
+  const event: AnalyticsEvent = {
+    name,
+    page: props.page,
+    attribution: onlyCampaignKeys(props.attribution),
+    timestamp: new Date().toISOString(),
+  };
+  send(event);
+  return event;
+}
+
+// Keep only utm_source, utm_campaign and click_id, even if a caller passes more.
+function onlyCampaignKeys(attribution: Attribution): Attribution {
+  const clean: Attribution = {};
+  for (const key of ATTRIBUTION_KEYS) {
+    const value = attribution[key];
+    if (value) clean[key] = value;
+  }
+  return clean;
+}
+
+// The one place that knows where events go.
+function send(event: AnalyticsEvent): void {
+  console.log(`[analytics] ${event.name}`, event);
 }

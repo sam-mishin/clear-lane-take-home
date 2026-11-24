@@ -26,9 +26,8 @@ Node version used: TODO
 ## Testing the funnel
 
 - Attribution: `/compare?utm_source=fb&utm_campaign=age_test&click_id=abc123`
-- Debug panel: add `?debug=1`
-- Trigger the mock error: TODO
-- Analytics events: TODO
+- Trigger the mock error: add `&mock=fail` to the URL
+- Events: open the browser console to see `age_selected` and `comparison_started`. They never include age or ZIP; the submission payload does.
 
 ## Project structure
 
@@ -36,7 +35,9 @@ Node version used: TODO
 src/app/(site)/        Homepage + article, full site header
 src/app/(campaign)/    Paid landing page, minimal header
 src/components/        Shared UI (CompareLink, Faq, StepList, ArticleCard, ...)
-src/lib/               Attribution, analytics, mock submit, content
+src/lib/site.ts        Routes, nav links, CTA label, disclosure (one place)
+src/lib/content/       Page copy as typed data (FAQ, steps, coverage, articles)
+src/lib/               Attribution, analytics, mock submission
 ```
 
 ## Task 1: Conversion hypothesis

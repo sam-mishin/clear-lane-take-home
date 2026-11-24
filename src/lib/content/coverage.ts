@@ -1,12 +1,13 @@
 // Educational coverage examples for the homepage explorer. Not actual policies.
+// Situations first, then the term (see docs/style-guide.md, Coverage explorer).
 
 export type CoverageExample = {
   id: string;
   name: string;
-  covers: string[];
-  doesNotCover: string[];
-  tendsToSuit: string;
-  tradeoff: string;
+  summary: string;
+  helpsWith: string[];
+  doesNotHelpWith: string[];
+  terms: { term: string; definition: string }[];
 };
 
 // TODO: three examples.

@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
-import { Suspense } from "react";
 import "./globals.css";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import { AttributionCapture } from "@/components/AttributionCapture";
-import { DebugPanel } from "@/components/debug/DebugPanel";
 
 const brandFont = Plus_Jakarta_Sans({
   variable: "--font-brand",
@@ -25,19 +22,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={brandFont.variable}>
       <body className="flex min-h-screen flex-col">
-        {/* Saves utm_source / utm_campaign / click_id on any entry page.
-            Suspense is required because it reads the URL (useSearchParams). */}
-        <Suspense fallback={null}>
-          <AttributionCapture />
-        </Suspense>
-
+        {/* First Tab stop on every page: jumps keyboard users past the header. */}
+        <a
+          href="#main"
+          className="bg-teal-strong sr-only rounded-full font-semibold text-white focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-5 focus:py-3"
+        >
+          Skip to main content
+        </a>
         <div className="flex-1">{children}</div>
-
         <SiteFooter />
-
-        <Suspense fallback={null}>
-          <DebugPanel />
-        </Suspense>
       </body>
     </html>
   );
