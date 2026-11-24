@@ -6,7 +6,8 @@ import { ChevronDownIcon } from "@/components/ui/Icons";
 // and it works before JavaScript loads.
 export function Faq({ items }: { items: FaqItem[] }) {
   return (
-    <div className="divide-line border-line divide-y border-y">
+    // A white card with a soft shadow, so the questions stand out from the section.
+    <div className="divide-line rounded-card bg-surface shadow-card divide-y px-5 md:px-8">
       {items.map((item) => (
         // "group" lets the chevron below react when this <details> is open.
         <details key={item.question} className="group">

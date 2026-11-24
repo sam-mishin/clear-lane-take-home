@@ -7,8 +7,12 @@
 //   screen is showing), so a failed request never wipes what the person entered.
 // - useRef holds things the screen doesn't show: the double-submit lock, the number of
 //   attempts (for the mock error) and the elements we move focus to.
-// - Events: age_selected when an age is picked; comparison_started only after the
-//   request succeeds. Neither event includes the age or the ZIP code.
+// - Events: age_selected when an age is picked, zip_step_viewed when the ZIP step
+//   appears, zip_invalid for a bad ZIP, submit_failed when the request fails, and
+//   comparison_started only after the request succeeds. No event includes the age or
+//   the ZIP code.
+// - Browser Back: picking an age adds a history entry, so the phone's Back button
+//   returns to the age step instead of leaving the page.
 // - Campaign params are read from the address bar when they're needed, so the funnel
 //   doesn't need useSearchParams (and shows up in the page's first HTML).
 //
@@ -52,7 +56,7 @@ type FunnelAction =
   | { type: "SUBMIT" } // request started
   | { type: "SUBMIT_OK" } // request worked
   | { type: "SUBMIT_FAIL" } // request failed
-  | { type: "EDIT_ANSWERS" }; // "Change my answers" on the success screen
+  | { type: "EDIT_ANSWERS" }; // "Change my answers" on the success screen, or browser Forward
 
 const initialState: FunnelState = {
   status: "age",
@@ -73,8 +77,13 @@ function funnelReducer(state: FunnelState, action: FunnelAction): FunnelState {
       return { ...state, status: "age", zipError: null };
 
     case "SET_ZIP":
-      // Typing clears the old error message.
-      return { ...state, zip: action.zip.trim(), zipError: null };
+      // Digits only, at most 5: letters and spaces never appear, and a pasted
+      // "02134-1234" becomes "02134". Typing clears the old error message.
+      return {
+        ...state,
+        zip: action.zip.replace(/\D/g, "").slice(0, 5),
+        zipError: null,
+      };
 
     case "ZIP_INVALID":
       return { ...state, zipError: action.error };
@@ -90,8 +99,8 @@ function funnelReducer(state: FunnelState, action: FunnelAction): FunnelState {
       return { ...state, status: "error" };
 
     case "EDIT_ANSWERS":
-      // From the success screen back to the ZIP step, answers kept.
-      return { ...state, status: "zip" };
+      // Back to the ZIP step, answers kept. Without an age there's no ZIP step yet.
+      return { ...state, status: state.ageRange ? "zip" : "age" };
   }
 }
 
@@ -134,8 +143,12 @@ export function AgeZipFunnel() {
   // Elements we move focus to.
   const selectedAgeRef = useRef<HTMLButtonElement>(null);
   const zipInputRef = useRef<HTMLInputElement>(null);
-  const errorRef = useRef<HTMLDivElement>(null);
+  const submitButtonRef = useRef<HTMLButtonElement>(null);
   const successHeadingRef = useRef<HTMLHeadingElement>(null);
+
+  // Has the ?age= prefill run? (React runs effects twice in development; this stops
+  // zip_step_viewed from being logged twice.)
+  const prefillDone = useRef(false);
 
   // The status we last moved focus for. Starts as the first status, so nothing
   // gets focused when the page loads.
@@ -149,7 +162,10 @@ export function AgeZipFunnel() {
 
     if (state.status === "age") selectedAgeRef.current?.focus();
     if (state.status === "zip") zipInputRef.current?.focus();
-    if (state.status === "error") errorRef.current?.focus();
+    // Error: focus "Try again". That also scrolls it into view on phones, where the
+    // error message would otherwise push it below the screen. The message itself is
+    // role="alert", so screen readers still read it out.
+    if (state.status === "error") submitButtonRef.current?.focus();
     if (state.status === "success") successHeadingRef.current?.focus();
   }, [state.status]);
 
@@ -157,13 +173,38 @@ export function AgeZipFunnel() {
   // age_selected sent) on the homepage, so no event here. previousStatus is set to
   // "zip" first, so the ZIP field is NOT focused: that would pop open the phone
   // keyboard as soon as the page loads.
+  // zip_step_viewed is logged here, since the ZIP step is the first thing they see.
   useEffect(() => {
+    if (prefillDone.current) return;
+    prefillDone.current = true;
     const ageFromUrl = new URLSearchParams(window.location.search).get("age");
     const range = AGE_RANGES.find((item) => item.id === ageFromUrl);
     if (range) {
       previousStatus.current = "zip";
       dispatch({ type: "SELECT_AGE", ageRange: range.id });
+      track("zip_step_viewed", {
+        attribution: currentAttribution(),
+        page: ROUTES.compare,
+      });
     }
+  }, []);
+
+  // Browser Back and Forward. Picking an age adds a history entry marked
+  // { funnelStep: "zip" } (see selectAge), so:
+  // - Back from the ZIP step lands on the entry before it: show the age step.
+  // - Forward lands on the "zip" entry again: show the ZIP step.
+  // Answers are kept either way. Ignored while a request is in flight.
+  useEffect(() => {
+    function onPopState(event: PopStateEvent) {
+      if (inFlight.current) return;
+      if (event.state?.funnelStep === "zip") {
+        dispatch({ type: "EDIT_ANSWERS" });
+      } else {
+        dispatch({ type: "CHANGE_AGE" });
+      }
+    }
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
   const isSubmitting = state.status === "submitting";
@@ -172,10 +213,23 @@ export function AgeZipFunnel() {
 
   function selectAge(ageRange: AgeRangeId) {
     dispatch({ type: "SELECT_AGE", ageRange });
-    track("age_selected", {
-      attribution: currentAttribution(),
-      page: ROUTES.compare,
-    });
+    // A history entry for the ZIP step (same URL), so Back returns to step 1.
+    // Next.js supports calling pushState directly and keeps its own data in the entry.
+    window.history.pushState({ funnelStep: "zip" }, "");
+    const attribution = currentAttribution();
+    track("age_selected", { attribution, page: ROUTES.compare });
+    track("zip_step_viewed", { attribution, page: ROUTES.compare });
+  }
+
+  // "Change" next to the chosen age. If the ZIP step has its own history entry, go
+  // back through history (onPopState then shows step 1), so Back and "Change" stay
+  // in step. Otherwise (opened from the homepage with ?age=) just show step 1.
+  function changeAge() {
+    if (window.history.state?.funnelStep === "zip") {
+      window.history.back();
+    } else {
+      dispatch({ type: "CHANGE_AGE" });
+    }
   }
 
   // -- Step 2: ZIP + submit -------------------------------------------------
@@ -188,7 +242,11 @@ export function AgeZipFunnel() {
     if (error) {
       dispatch({ type: "ZIP_INVALID", error });
       zipInputRef.current?.focus(); // screen readers then read the error
-      return; // no request and no event for a validation error
+      track("zip_invalid", {
+        attribution: currentAttribution(),
+        page: ROUTES.compare,
+      });
+      return; // no request, and no comparison_started
     }
 
     inFlight.current = true; // locked right now, before any re-render
@@ -211,6 +269,7 @@ export function AgeZipFunnel() {
       track("comparison_started", { attribution, page: ROUTES.compare }); // success only
     } catch {
       dispatch({ type: "SUBMIT_FAIL" }); // answers stay; "Try again" resubmits
+      track("submit_failed", { attribution, page: ROUTES.compare });
     } finally {
       inFlight.current = false; // unlock so "Try again" works
     }
@@ -223,7 +282,9 @@ export function AgeZipFunnel() {
   return (
     <div
       id={FUNNEL_ID}
-      className="rounded-card border-line bg-surface border p-6 shadow-sm md:p-8"
+      // The phone sticky bar stays hidden while the form is on screen.
+      data-sticky-cta-hide=""
+      className="rounded-card bg-surface shadow-card p-6 md:p-8"
     >
       {state.status === "success" && (
         <SuccessScreen
@@ -293,7 +354,7 @@ export function AgeZipFunnel() {
               </p>
               <Button
                 variant="text"
-                onClick={() => dispatch({ type: "CHANGE_AGE" })}
+                onClick={changeAge}
                 disabled={isSubmitting}
                 className="min-h-11"
               >
@@ -314,16 +375,18 @@ export function AgeZipFunnel() {
               readOnly={isSubmitting}
               type="text"
               inputMode="numeric"
+              // The phone keyboard's Enter key says "Go" and submits the form, so
+              // nobody has to close the keyboard to reach the button underneath it.
+              enterKeyHint="go"
               autoComplete="postal-code"
-              maxLength={5}
+              // No maxLength: SET_ZIP keeps the first 5 digits, which also handles
+              // pastes like " 02134" that maxLength would cut short.
               className="mt-5"
             />
 
             {state.status === "error" && (
               // role="alert" makes screen readers announce it right away.
               <div
-                ref={errorRef}
-                tabIndex={-1}
                 role="alert"
                 className="border-error bg-surface mt-5 flex gap-3 rounded-xl border-2 p-4"
               >
@@ -340,6 +403,7 @@ export function AgeZipFunnel() {
             )}
 
             <Button
+              ref={submitButtonRef}
               type="submit"
               fullWidth
               loading={isSubmitting}
@@ -403,11 +467,7 @@ function SuccessScreen({
       </span>
 
       {/* tabIndex -1 so focus can be moved here when this screen appears */}
-      <h2
-        ref={headingRef}
-        tabIndex={-1}
-        className="mt-5 text-2xl font-bold md:text-3xl"
-      >
+      <h2 ref={headingRef} tabIndex={-1} className="mt-5 text-2xl md:text-3xl">
         You&apos;re all set
       </h2>
       <p className="mt-3 text-lg">

@@ -7,12 +7,16 @@ import { ROUTES } from "@/lib/site";
 export type ArticleMotif = "road" | "shield" | "calendar";
 
 // One card in the homepage Resources section or the article's Related articles.
-// A card with no href is a labeled preview (not a link).
+// - href: the card is a link to a full article.
+// - No href: the card is a labeled preview of an article that isn't written yet.
+//   sectionId points to the section of the rate guide that covers the same topic,
+//   so the preview still has a next step instead of a dead end.
 export type ArticleSummary = {
   title: string;
   excerpt: string;
   motif: ArticleMotif;
   href?: string;
+  sectionId?: string; // previews only: a section id in whatAffectsYourRate
 };
 
 export const articles: ArticleSummary[] = [
@@ -28,12 +32,14 @@ export const articles: ArticleSummary[] = [
     excerpt:
       "How choosing a higher or lower deductible changes what you pay now and after a claim.",
     motif: "shield",
+    sectionId: "your-coverage", // "The coverage you choose" covers deductibles
   },
   {
     title: "When to shop around for car insurance",
     excerpt:
       "Life changes and renewal dates that make it worth taking a fresh look at your coverage.",
     motif: "calendar",
+    sectionId: "comparing", // "How to compare with confidence"
   },
 ];
 
@@ -52,6 +58,7 @@ export const whatAffectsYourRate = {
   description:
     "A plain-language guide to the factors insurers weigh when pricing car insurance, which ones you can change, and how to compare with confidence.",
   byline: "ClearLane Editorial Team",
+  updated: "2026-11-24", // shown as "Updated November 24, 2026" (ISO date for <time>)
   intro:
     "Two drivers with the same car can pay very different amounts for car insurance. That's because insurers price risk, and each one measures it a little differently. Knowing what goes into your rate makes it easier to understand a quote, ask better questions and spot when it's worth comparing.",
   sections: [

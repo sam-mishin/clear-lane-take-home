@@ -11,7 +11,7 @@ export function Wordmark({ tone = "light" }: { tone?: "light" | "dark" }) {
     <Link
       href="/"
       className={clsx(
-        "inline-flex min-h-11 items-center gap-2 text-xl font-extrabold tracking-tight",
+        "inline-flex min-h-11 shrink-0 items-center gap-2 text-xl font-extrabold tracking-tight whitespace-nowrap",
         dark ? "text-cream focus-visible:outline-teal" : "text-ink",
       )}
     >

@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { SiteFooter } from "@/components/layout/SiteFooter";
-import { openGraph, SITE_DESCRIPTION, SITE_NAME } from "@/lib/metadata";
+import {
+  openGraph,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/metadata";
 
 const brandFont = Plus_Jakarta_Sans({
   variable: "--font-brand",
@@ -16,15 +20,29 @@ export const metadata: Metadata = {
   },
   // Fallback for any route that doesn't set its own.
   description: SITE_DESCRIPTION,
+  // Relative URLs below (canonical, preview image) are resolved against this.
+  metadataBase: SITE_URL,
   openGraph: openGraph(SITE_NAME, SITE_DESCRIPTION),
+  // Large image card on X/Twitter; it uses the og:image.
+  twitter: { card: "summary_large_image" },
   // Favicon, icon.svg and apple-icon.png live in src/app/ and are added by Next.js.
+  // The link-preview picture is set in openGraph() (lib/metadata.ts).
 };
 
-// Root layout: wraps every route. Route groups (site) and (campaign)
-// add their own header on top of this.
+// Root layout: wraps every route. Route groups (site) and (campaign) add their own
+// header and footer inside it. <body> is a column at least the screen's height, and
+// each group's <main> grows to fill it, so the footer stays at the bottom.
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={brandFont.variable}>
+    // data-scroll-behavior="smooth": globals.css turns on smooth scrolling for in-page
+    // links (TOC, "See how it works"). This tells Next.js to switch it off while
+    // changing pages, so a new page starts at the top instead of gliding there and
+    // stopping partway (Next.js 16 no longer does this by default).
+    <html
+      lang="en"
+      className={brandFont.variable}
+      data-scroll-behavior="smooth"
+    >
       <body className="flex min-h-screen flex-col">
         {/* First Tab stop on every page: jumps keyboard users past the header. */}
         <a
@@ -33,8 +51,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           Skip to main content
         </a>
-        <div className="flex-1">{children}</div>
-        <SiteFooter />
+        {/* Header, main, footer: added by the (site) and (campaign) layouts, so
+            /compare can use the campaign footer (no page links). */}
+        {children}
       </body>
     </html>
   );

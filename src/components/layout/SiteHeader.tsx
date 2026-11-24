@@ -13,8 +13,9 @@ import { NAV_LINKS, ROUTES } from "@/lib/site";
 // Header for (site) pages: homepage + article.
 // - Desktop: text links + a small "Compare my options" button (that button IS the
 //   link to the campaign page, so it isn't repeated as a text link).
-// - Mobile: wordmark + Menu button. The panel opens below the bar; Escape closes it and
-//   returns focus to the button; choosing a link closes it.
+// - Below lg (phones and tablets): wordmark + Menu button (tablets also get the
+//   compare button). The panel opens below the bar; Escape closes it and returns
+//   focus to the button; choosing a link closes it.
 // - aria-current="page" marks where you are.
 // Every link carries campaign params through (AttributedLink / CompareLink).
 
@@ -53,11 +54,12 @@ export function SiteHeader() {
           : "border-line bg-cream/95",
       )}
     >
-      <Container className="flex min-h-18 items-center justify-between gap-6">
+      <Container className="flex min-h-18 items-center justify-between gap-3">
         <Wordmark />
 
-        {/* Desktop */}
-        <nav aria-label="Main" className="hidden md:block">
+        {/* Desktop (lg, 1024px+): the full nav. Below lg the links don't fit on one
+            line, so tablets get the Menu button too. */}
+        <nav aria-label="Main" className="hidden lg:block">
           <ul className="flex items-center gap-8">
             {textLinks.map((link) => (
               <li key={link.href}>
@@ -76,25 +78,33 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        {/* Mobile */}
-        <button
-          ref={buttonRef}
-          type="button"
-          aria-expanded={open}
-          aria-controls="mobile-nav"
-          onClick={() => setOpen((value) => !value)}
-          className="border-ink text-ink hover:bg-ink inline-flex min-h-11 items-center gap-2 rounded-full border-2 px-4 text-base font-semibold hover:text-white md:hidden"
-        >
-          {open ? <XIcon /> : <MenuIcon />}
-          {open ? "Close" : "Menu"}
-        </button>
+        {/* Phones and tablets (below lg): Menu button.
+            - Tablets (md to lg) also get "Compare my options" here, since there's room.
+            - Phones don't: the sticky bar at the bottom of the screen (StickyCompareBar)
+              is their compare button, so there are never two on screen at once. */}
+        <div className="flex items-center gap-3 lg:hidden">
+          {/* max-md:hidden, not "hidden md:inline-flex": the button's own inline-flex
+              class would win over "hidden" */}
+          <CompareLink size="sm" className="max-md:hidden" />
+          <button
+            ref={buttonRef}
+            type="button"
+            aria-expanded={open}
+            aria-controls="mobile-nav"
+            onClick={() => setOpen((value) => !value)}
+            className="border-ink text-ink hover:bg-ink inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border-2 px-4 text-base font-semibold hover:text-white"
+          >
+            {open ? <XIcon /> : <MenuIcon />}
+            {open ? "Close" : "Menu"}
+          </button>
+        </div>
       </Container>
 
       <nav
         id="mobile-nav"
         aria-label="Main"
         hidden={!open}
-        className="border-line bg-cream border-t md:hidden"
+        className="border-line bg-cream border-t lg:hidden"
       >
         <Container className="py-4">
           <ul className="divide-line divide-y">

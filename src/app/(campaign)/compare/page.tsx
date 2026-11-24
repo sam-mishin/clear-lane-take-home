@@ -6,11 +6,13 @@ import { CheckIcon } from "@/components/ui/Icons";
 import { AgeZipFunnel } from "@/components/funnel/AgeZipFunnel";
 import { JumpToFormButton } from "@/components/funnel/JumpToFormButton";
 import { StepList } from "@/components/StepList";
+import { HillDivider } from "@/components/ui/HillDivider";
 import { Faq } from "@/components/Faq";
 import { FinalCtaBand } from "@/components/FinalCtaBand";
 import { compareFaq } from "@/lib/content/faq";
 import { whatHappensNext } from "@/lib/content/steps";
 import { openGraph } from "@/lib/metadata";
+import { ROUTES } from "@/lib/site";
 
 // Title repeats the ad's wording ("Compare auto insurance options for your age") for message match.
 const title = "Compare auto insurance options for your age";
@@ -25,6 +27,9 @@ export const metadata: Metadata = {
   // the campaign's conversion rate (starts / landing-page visits).
   // follow: true still lets crawlers reach the rest of the site through its links.
   robots: { index: false, follow: true },
+  // The one official URL for this page, so search engines ignore copies with
+  // campaign params (?utm_source=...) and count them as this page.
+  alternates: { canonical: ROUTES.compare },
 };
 
 // The three reassurances next to the form.
@@ -45,10 +50,7 @@ export default function ComparePage() {
       <section aria-labelledby="hero-heading" className="pt-6 pb-10 md:py-16">
         <Container className="grid gap-6 lg:grid-cols-2 lg:items-start lg:gap-12">
           <div className="lg:pt-6">
-            <h1
-              id="hero-heading"
-              className="text-3xl font-extrabold md:text-6xl"
-            >
+            <h1 id="hero-heading" className="text-3xl md:text-6xl">
               Compare auto insurance options for your age
             </h1>
             <p className="text-ink-muted mt-3 max-w-2xl text-lg md:mt-4 md:text-xl">
@@ -66,10 +68,11 @@ export default function ComparePage() {
         </Container>
       </section>
 
-      {/* What happens next */}
+      {/* What happens next: a white band between two hill edges */}
+      <HillDivider from="cream" to="surface" />
       <section
         aria-labelledby="next-heading"
-        className="bg-surface border-line border-y py-16 md:py-24"
+        className="bg-surface pt-10 pb-16 md:pt-12 md:pb-24"
       >
         <Container>
           <SectionHeading
@@ -77,12 +80,17 @@ export default function ComparePage() {
             title="What happens next"
             lead="No surprises. Here's exactly what to expect after you start."
           />
-          <StepList steps={whatHappensNext} />
+          <StepList steps={whatHappensNext} circle="soft" />
         </Container>
       </section>
 
+      <HillDivider from="surface" to="cream" flip />
+
       {/* FAQ: heading on the left, questions on the right from lg up */}
-      <section aria-labelledby="faq-heading" className="py-16 md:py-24">
+      <section
+        aria-labelledby="faq-heading"
+        className="pt-10 pb-16 md:pt-12 md:pb-24"
+      >
         <Container className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-12">
           <SectionHeading
             id="faq-heading"

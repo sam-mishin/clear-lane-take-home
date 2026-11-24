@@ -18,11 +18,35 @@ export const metadata: Metadata = {
   title: article.title,
   description: article.description,
   openGraph: openGraph(article.title, article.description, "article"),
+  // The one official URL for this page, so search engines ignore copies with
+  // campaign params (?utm_source=...) and count them as this page.
+  alternates: { canonical: ROUTES.article },
 };
 
 // The inline "compare" box goes right after this section. The reader has just read
 // that age and location shape a rate, and those are the two things the form asks for.
 const INLINE_CTA_AFTER = "where-you-live";
+
+// "2026-11-24" -> "November 24, 2026". timeZone UTC so the date never shifts a day
+// depending on where the page is built.
+function formatDate(isoDate: string): string {
+  return new Date(isoDate).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+// Reading time from the article's own text, at about 200 words a minute.
+function readingMinutes(): number {
+  let text = article.intro;
+  for (const section of article.sections) {
+    text += " " + section.paragraphs.join(" ");
+  }
+  const words = text.split(/\s+/).length;
+  return Math.max(1, Math.round(words / 200));
+}
 
 // Route: /blog/what-affects-your-car-insurance-rate
 // Task 3. All the words live in lib/content/articles.ts; this file is only layout.
@@ -46,11 +70,24 @@ export default function ArticlePage() {
             <p className="text-teal-strong text-sm font-semibold">
               Car insurance basics
             </p>
-            <h1 className="mt-3 text-3xl font-bold md:text-5xl">
-              {article.title}
-            </h1>
-            <p className="text-ink-muted mt-4 text-base">By {article.byline}</p>
+            <h1 className="mt-3 text-3xl md:text-5xl">{article.title}</h1>
+            {/* Byline, last-updated date and reading time: readers check how current
+                insurance advice is. No named reviewer: the brief rules out invented
+                credentials. */}
+            <p className="text-ink-muted mt-4 text-base">
+              By {article.byline} ·{" "}
+              <time dateTime={article.updated}>
+                Updated {formatDate(article.updated)}
+              </time>{" "}
+              · {readingMinutes()} min read
+            </p>
             <p className="mt-6 text-lg md:text-xl">{article.intro}</p>
+            {/* Phones and tablets: a way to compare on the first screen. On desktop the
+                sidebar button does this job, so it's hidden from lg up.
+                data-sticky-cta-hide: the phone sticky bar waits until this scrolls away. */}
+            <div data-sticky-cta-hide="" className="mt-6 lg:hidden">
+              <CompareLink variant="secondary" fullWidth />
+            </div>
           </header>
 
           <ArticleHero className="rounded-card mt-8 md:mt-10" />
@@ -95,7 +132,7 @@ export default function ArticlePage() {
                         stops below the sticky header instead of under it */}
                     <h2
                       id={section.id}
-                      className="scroll-mt-24 text-2xl font-bold md:text-3xl"
+                      className="scroll-mt-24 text-2xl md:text-3xl"
                     >
                       {section.heading}
                     </h2>
@@ -123,13 +160,13 @@ export default function ArticlePage() {
         className="bg-surface border-line border-t py-16 md:py-24"
       >
         <Container>
-          <h2 id="related-heading" className="text-2xl font-bold md:text-4xl">
+          <h2 id="related-heading" className="text-2xl md:text-4xl">
             Related articles
           </h2>
           <ul className="mt-10 grid gap-6 md:grid-cols-2 md:gap-8 lg:max-w-4xl">
             {related.map((item) => (
               <li key={item.title}>
-                <ArticleCard article={item} />
+                <ArticleCard article={item} onArticlePage />
               </li>
             ))}
           </ul>
@@ -150,6 +187,7 @@ function InlineCta() {
   return (
     <aside
       aria-label="Compare your options"
+      data-sticky-cta-hide=""
       className="rounded-card border-teal-strong bg-surface mt-12 border-2 p-6 md:p-8"
     >
       <p className="text-xl font-semibold md:text-2xl">
@@ -168,20 +206,43 @@ function InlineCta() {
 function RateFactorTable() {
   return (
     <section aria-labelledby="at-a-glance" className="mt-12">
-      <h2
-        id="at-a-glance"
-        className="scroll-mt-24 text-2xl font-bold md:text-3xl"
-      >
+      <h2 id="at-a-glance" className="scroll-mt-24 text-2xl md:text-3xl">
         At a glance
       </h2>
 
-      {/* On phones the table is wider than the screen, so this box scrolls sideways.
-          tabIndex + role + aria-label let keyboard users reach and scroll it too. */}
+      {/* Phones: one card per factor, so every column stays readable without
+          scrolling sideways. Hidden from md up, where the table fits. */}
+      <div className="mt-6 md:hidden">
+        <p className="text-ink-muted text-sm">{rateFactorTable.caption}</p>
+        <ul className="mt-3 space-y-3">
+          {rateFactorTable.rows.map((row) => (
+            <li
+              key={row.factor}
+              className="rounded-card border-line bg-surface border p-5"
+            >
+              <h3 className="text-lg font-semibold">{row.factor}</h3>
+              <dl className="mt-3 space-y-3 text-base">
+                <div>
+                  <dt className="font-semibold">Can you change it?</dt>
+                  <dd>{row.canChange}</dd>
+                </div>
+                <div>
+                  <dt className="font-semibold">What you can do</dt>
+                  <dd className="text-ink-muted">{row.whatToDo}</dd>
+                </div>
+              </dl>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* md and up: the full table. It still scrolls sideways if it ever gets too
+          narrow; tabIndex + role + aria-label let keyboard users reach and scroll it. */}
       <div
         role="region"
         aria-label="Rate factors table"
         tabIndex={0}
-        className="rounded-card border-line bg-surface mt-6 overflow-x-auto border"
+        className="rounded-card border-line bg-surface mt-6 hidden overflow-x-auto border md:block"
       >
         <table className="w-full min-w-xl border-collapse text-left">
           <caption className="text-ink-muted px-4 pt-4 pb-2 text-left text-sm">

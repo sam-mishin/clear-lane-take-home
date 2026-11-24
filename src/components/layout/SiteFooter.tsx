@@ -1,4 +1,3 @@
-import clsx from "clsx";
 import { AttributedLink } from "@/components/AttributedLink";
 import { Container } from "@/components/ui/Container";
 import { Wordmark } from "@/components/ui/Wordmark";
@@ -6,8 +5,8 @@ import { DISCLOSURE, FICTIONAL_NOTE, NAV_LINKS } from "@/lib/site";
 
 // Shared footer with the not-an-insurer disclosure.
 // Disclosure text stays at 14px+ and 10:1 contrast: easy to find, not fine print.
-// variant="campaign" (on /compare) keeps the disclosure but drops the nav links, so
-// paid visitors have no exits away from the form, and leaves room for the sticky mobile bar.
+// variant="campaign" (on /compare, set in the (campaign) layout) keeps the disclosure
+// but drops the page links, so paid visitors have no exits away from the form.
 export function SiteFooter({
   variant = "site",
 }: {
@@ -15,11 +14,10 @@ export function SiteFooter({
 }) {
   const campaign = variant === "campaign";
   return (
-    <footer className="bg-ink text-cream">
-      {/* On /compare, extra bottom space (pb-28) so the sticky phone bar never covers the text */}
-      <Container
-        className={clsx("pt-12 md:py-16", campaign ? "pb-28" : "pb-12")}
-      >
+    // data-sticky-cta-hide: the phone sticky bar slides away when the footer appears.
+    <footer data-sticky-cta-hide="" className="bg-ink text-cream">
+      {/* No extra space for the sticky phone bar: it slides away once the footer shows. */}
+      <Container className="py-12 md:py-16">
         <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
           <div className="max-w-md">
             <Wordmark tone="dark" />

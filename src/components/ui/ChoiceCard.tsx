@@ -12,12 +12,16 @@ import { CheckIcon } from "@/components/ui/Icons";
 // The selected card has a teal border, a light teal fill and a check mark, so the
 // selection doesn't depend on color alone.
 
-function cardClasses(isSelected: boolean) {
+// selectedFill: light teal by default. Cards that sit on a light teal section
+// (the coverage explorer) stay white when selected and get a soft teal ring instead.
+function cardClasses(isSelected: boolean, onTint = false) {
   return clsx(
-    "flex w-full cursor-pointer items-center justify-between gap-3 rounded-card border-2 bg-surface text-left font-semibold transition-colors duration-150 motion-reduce:transition-none",
-    isSelected
-      ? "border-teal-strong bg-teal-soft"
-      : "border-line hover:border-ink-muted",
+    "flex w-full cursor-pointer items-center justify-between gap-3 rounded-card border-2 text-left font-semibold transition-colors duration-150 motion-reduce:transition-none",
+    !isSelected && "bg-surface border-line hover:border-ink-muted",
+    isSelected && !onTint && "border-teal-strong bg-teal-soft",
+    isSelected &&
+      onTint &&
+      "border-teal-strong bg-surface ring-teal-strong/15 ring-4",
   );
 }
 
@@ -42,6 +46,8 @@ type RadioCardProps = {
   onSelect: () => void;
   label: string;
   description?: string; // optional second line in lighter text
+  illustration?: React.ReactNode; // optional small picture on the left
+  onTint?: boolean; // true when the cards sit on a light teal section
 };
 
 export function RadioCard({
@@ -50,6 +56,8 @@ export function RadioCard({
   onSelect,
   label,
   description,
+  illustration,
+  onTint = false,
 }: RadioCardProps) {
   return (
     // The whole card is the <label>, so clicking anywhere on it selects the radio.
@@ -65,12 +73,13 @@ export function RadioCard({
       />
       <span
         className={clsx(
-          cardClasses(checked),
-          "min-h-14 px-5 py-4",
+          cardClasses(checked, onTint),
+          illustration ? "min-h-14 py-3 pr-5 pl-3" : "min-h-14 px-5 py-4",
           "peer-focus-visible:outline-teal-strong peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2",
         )}
       >
-        <span>
+        {illustration}
+        <span className="flex-1">
           <span className="block">{label}</span>
           {description && (
             <span className="text-ink-muted mt-1 block text-base font-normal">

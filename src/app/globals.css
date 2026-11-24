@@ -29,6 +29,27 @@
 
   /* Shape */
   --radius-card: 1rem; /* rounded-card: cards, panels, radio cards */
+
+  /* Depth: cards sit on a section of a different tone, lifted by a soft shadow
+     instead of a hairline border. shadow-card at rest, shadow-card-hover on hover. */
+  --shadow-card:
+    0 1px 2px rgb(18 35 63 / 0.06), 0 8px 24px rgb(18 35 63 / 0.07);
+  --shadow-card-hover:
+    0 2px 4px rgb(18 35 63 / 0.06), 0 16px 40px rgb(18 35 63 / 0.12);
+
+  /* Motion: the coverage explorer's panel fades up when the example changes.
+     Used as motion-safe:animate-fade-up, so it's off with reduced motion. */
+  --animate-fade-up: fade-up 200ms ease-out;
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
 /* next/font loads Plus Jakarta Sans as --font-brand (layout.tsx); this makes it font-sans. */
@@ -58,12 +79,14 @@
     Headings and paragraphs look right with no classes. Add classes only to
     override, e.g. the article H1 uses "text-3xl md:text-5xl font-bold".
   */
+  /* Calm headings: H1 at 700 and H2 at 600 with tight tracking, instead of
+     800/700. Same typeface as the body (style guide, Typography). */
   h1 {
-    @apply text-4xl font-extrabold tracking-tight text-balance md:text-6xl;
+    @apply text-4xl font-bold tracking-tight text-balance md:text-6xl;
   }
 
   h2 {
-    @apply text-2xl font-bold tracking-tight text-balance md:text-4xl;
+    @apply text-2xl font-semibold tracking-tight text-balance md:text-4xl;
   }
 
   h3 {
@@ -82,5 +105,27 @@
   /* One focus style for everything, so nothing ships without a visible ring. */
   :focus-visible {
     @apply outline-teal-strong outline-2 outline-offset-2;
+  }
+
+  /* FAQ answers slide open instead of snapping (200ms). Browsers without
+     interpolate-size, and people with reduced motion, get the instant open. */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (interpolate-size: allow-keywords) {
+      :root {
+        interpolate-size: allow-keywords;
+      }
+
+      details::details-content {
+        block-size: 0;
+        overflow-y: clip;
+        transition:
+          block-size 200ms ease-out,
+          content-visibility 200ms allow-discrete;
+      }
+
+      details[open]::details-content {
+        block-size: auto;
+      }
+    }
   }
 }

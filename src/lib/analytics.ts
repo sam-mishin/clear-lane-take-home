@@ -3,8 +3,19 @@ import { ATTRIBUTION_KEYS, type Attribution } from "@/lib/attribution";
 // Mock analytics. Events are logged to the browser console instead of being sent anywhere.
 // Events only ever carry the page and the campaign params, never the person's answers.
 
-// The only two events the funnel sends.
-export type EventName = "age_selected" | "comparison_started";
+// Every event the funnel sends, in funnel order. The brief asks for age_selected and
+// comparison_started; the other three show where people drop off between them.
+// - age_selected: an age range was picked (homepage quick start or /compare step 1)
+// - zip_step_viewed: the ZIP step appeared
+// - zip_invalid: "Compare my options" pressed with an empty or malformed ZIP
+// - submit_failed: the comparison request failed (the error state appeared)
+// - comparison_started: the request succeeded
+export type EventName =
+  | "age_selected"
+  | "zip_step_viewed"
+  | "zip_invalid"
+  | "submit_failed"
+  | "comparison_started";
 
 // What a caller passes in.
 export type EventProps = {

@@ -1,8 +1,11 @@
 // Educational coverage examples for the homepage explorer. Not actual policies.
 // Situations first, then the term (see docs/style-guide.md, Coverage explorer).
 
+import type { SpotName } from "@/components/illustrations/Spot";
+
 export type CoverageExample = {
   id: string;
+  illustration: SpotName; // one everyday scene for this example (see Spot.tsx)
   name: string;
   summary: string;
   helpsWith: string[];
@@ -13,6 +16,7 @@ export type CoverageExample = {
 export const coverageExamples: CoverageExample[] = [
   {
     id: "liability",
+    illustration: "liability",
     name: "Liability only",
     summary: "Covers damage you cause to other people and their property.",
     helpsWith: [
@@ -38,6 +42,7 @@ export const coverageExamples: CoverageExample[] = [
   },
   {
     id: "collision",
+    illustration: "collision",
     name: "Liability + collision",
     summary: "Adds repairs to your own car after a crash, whoever caused it.",
     helpsWith: [
@@ -63,6 +68,7 @@ export const coverageExamples: CoverageExample[] = [
   },
   {
     id: "comprehensive",
+    illustration: "comprehensive",
     name: "Liability + collision + comprehensive",
     summary:
       'Often called "full coverage." Adds damage that isn\'t from a crash.',

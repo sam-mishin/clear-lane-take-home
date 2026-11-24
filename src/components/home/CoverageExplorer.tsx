@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Spot } from "@/components/illustrations/Spot";
 import { Badge } from "@/components/ui/Badge";
 import { RadioCard } from "@/components/ui/ChoiceCard";
 import { CheckIcon, XIcon } from "@/components/ui/Icons";
@@ -32,21 +33,39 @@ export function CoverageExplorer() {
               onSelect={() => setSelectedIndex(index)}
               label={example.name}
               description={example.summary}
+              onTint
+              illustration={
+                <Spot
+                  name={example.illustration}
+                  className="size-14 md:size-16"
+                />
+              }
             />
           ))}
         </div>
       </fieldset>
 
-      {/* Right: the explanation for the selected option */}
+      {/* Right: the explanation for the selected option.
+          key={selected.id} makes React redraw the panel on every change, which
+          replays the short fade-up (off with reduced motion). */}
       <div
+        key={selected.id}
         aria-live="polite"
-        className="rounded-card border-line bg-surface border p-6 shadow-sm md:p-8"
+        className="rounded-card bg-surface shadow-card motion-safe:animate-fade-up p-6 md:p-8"
       >
-        <Badge>Educational example, not a policy</Badge>
-        <h3 className="mt-4 text-xl font-semibold md:text-2xl">
-          {selected.name}
-        </h3>
-        <p className="text-ink-muted mt-2 text-lg">{selected.summary}</p>
+        <div className="flex items-start justify-between gap-6">
+          <div>
+            <Badge>Educational example, not a policy</Badge>
+            <h3 className="mt-4 text-xl font-semibold md:text-2xl">
+              {selected.name}
+            </h3>
+            <p className="text-ink-muted mt-2 text-lg">{selected.summary}</p>
+          </div>
+          <Spot
+            name={selected.illustration}
+            className="hidden size-28 md:block"
+          />
+        </div>
 
         <div className="mt-6 grid gap-6 md:grid-cols-2">
           <div>

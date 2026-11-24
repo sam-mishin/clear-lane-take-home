@@ -12,7 +12,11 @@ export function FinalCtaBand({
   action: React.ReactNode;
 }) {
   return (
-    <section aria-labelledby="final-cta-heading" className="py-16 md:py-24">
+    <section
+      aria-labelledby="final-cta-heading"
+      data-sticky-cta-hide=""
+      className="py-16 md:py-24"
+    >
       <Container>
         <div className="rounded-card bg-ink text-cream relative overflow-hidden px-6 py-12 text-center md:px-12 md:py-16">
           {/* Lane lines sit behind the text; "relative" on the text keeps it on top. */}
@@ -20,7 +24,7 @@ export function FinalCtaBand({
           <div className="relative">
             <h2
               id="final-cta-heading"
-              className="mx-auto max-w-2xl text-2xl font-bold md:text-4xl"
+              className="mx-auto max-w-2xl text-2xl md:text-4xl"
             >
               {title}
             </h2>

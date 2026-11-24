@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import { AttributedLink } from "@/components/AttributedLink";
 import {
   buttonStyles,
@@ -27,11 +28,17 @@ export function CompareLink({
     <AttributedLink
       href={ROUTES.compare}
       onClick={onClick}
-      className={buttonStyles({ variant, size, fullWidth, className })}
+      className={buttonStyles({
+        variant,
+        size,
+        fullWidth,
+        className: clsx("group", className),
+      })}
     >
       {/* Always "Compare my options", from lib/site.ts */}
       {CTA_LABEL}
-      <ArrowRightIcon className="size-5" />
+      {/* The arrow nudges forward on hover: "this goes somewhere". */}
+      <ArrowRightIcon className="size-5 transition-transform duration-150 group-hover:translate-x-1 motion-reduce:transition-none" />
     </AttributedLink>
   );
 }

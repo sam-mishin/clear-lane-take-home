@@ -1,27 +1,56 @@
+import { Spot } from "@/components/illustrations/Spot";
 import type { Step } from "@/lib/content/steps";
 
-// Numbered 3-step list. Reused on / ("How it works") and /compare ("What happens next").
-// Stacked on mobile, three across from md up. A real <ol>, so the numbers are announced.
-export function StepList({ steps }: { steps: Step[] }) {
+// Three steps joined by a dashed teal "lane" line, like the road in the hero.
+// Reused on / ("How it works") and /compare ("What happens next").
+// - Phones: stacked, illustration on the left, the lane runs down between them.
+// - md and up: three across, the lane runs behind the illustrations.
+// A real <ol>, so screen readers announce "1 of 3"; the "Step 1" label repeats
+// that visually.
+// circle: "white" when the section is cream or teal, "soft" when it's white.
+export function StepList({
+  steps,
+  circle = "white",
+}: {
+  steps: Step[];
+  circle?: "soft" | "white";
+}) {
   return (
-    <ol className="mt-10 grid gap-6 md:mt-12 md:grid-cols-3 md:gap-8">
+    <ol className="relative mt-10 grid gap-8 md:mt-14 md:grid-cols-3">
+      {/* The lane line, md and up: one dashed line behind all three drawings. */}
+      <span
+        aria-hidden="true"
+        className="border-teal absolute inset-x-1/6 top-16 hidden border-t-4 border-dashed md:block"
+      />
+
       {steps.map((step, index) => (
         <li
           key={step.title}
-          className="rounded-card border-line bg-surface border p-6 md:p-8"
+          className="relative flex gap-4 md:flex-col md:items-center md:px-3 md:text-center"
         >
-          {/* The number circle is decoration: the <ol> already tells screen readers
-              "1 of 3", so it's hidden from them to avoid reading the number twice. */}
-          <span
-            aria-hidden="true"
-            className="bg-teal-soft text-teal-strong flex size-10 items-center justify-center rounded-full font-bold"
-          >
-            {index + 1}
-          </span>
-          <h3 className="mt-5 text-lg font-semibold md:text-xl">
-            {step.title}
-          </h3>
-          <p className="text-ink-muted mt-2 text-lg">{step.body}</p>
+          {/* Phones: a lane segment from this drawing down to the next one */}
+          {index < steps.length - 1 && (
+            <span
+              aria-hidden="true"
+              className="border-teal absolute top-22 -bottom-8 left-10.5 border-l-4 border-dashed md:hidden"
+            />
+          )}
+          <Spot
+            name={step.illustration}
+            circle={circle}
+            className="size-22 md:size-33"
+          />
+          <div className="pt-2 md:pt-0">
+            <p className="text-teal-strong text-sm font-bold md:mt-5">
+              Step {index + 1}
+            </p>
+            <h3 className="mt-1 text-lg font-semibold md:text-xl">
+              {step.title}
+            </h3>
+            <p className="text-ink-muted mt-2 text-lg md:max-w-xs">
+              {step.body}
+            </p>
+          </div>
         </li>
       ))}
     </ol>

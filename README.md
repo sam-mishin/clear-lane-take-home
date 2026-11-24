@@ -28,8 +28,10 @@ Node version used: TODO
 ## Testing the funnel
 
 - Attribution: `/compare?utm_source=fb&utm_campaign=age_test&click_id=abc123`
-- Trigger the mock error: add `&mock=fail` to the URL
-- Events: open the browser console to see `age_selected` and `comparison_started`. They never include age or ZIP; the submission payload does.
+- Trigger the mock error: add `&mock=fail` to the URL (first attempt fails, "Try again" succeeds) or `&mock=fail-always`
+- Skip step 1 from the homepage: `/compare?age=45-54` opens on the ZIP step (the homepage hero's age buttons link here)
+- Events: open the browser console. The brief's two events are `age_selected` and `comparison_started` (success only). Three more show where people drop off: `zip_step_viewed`, `zip_invalid` and `submit_failed`. No event includes the age or ZIP; the submission payload does.
+- Browser Back: on the ZIP step, Back returns to the age step with the age still selected
 
 ## Project structure
 
